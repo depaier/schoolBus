@@ -129,3 +129,18 @@ VITE_API_URL=http://localhost:8000
 - [ ] Docker 컨테이너화
 - [ ] 배포 설정
 # test
+
+
+
+# 폴러 테스트 방법
+
+# 1. 의존성 설치
+cd /Users/jinho/개발/schoolBus/backend
+pip install -r requirements.txt
+
+# 2. 폴러 테스트 실행 (30초 주기)
+cd poller
+python test_poller.py
+
+# 또는 커스텀 주기로 실행 (예: 10초)
+python test_poller.py 10
