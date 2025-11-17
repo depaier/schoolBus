@@ -183,3 +183,5 @@ pip install beautifulsoup4   # 웹 스크래핑
 pip install aiosmtplib       # 비동기 이메일 전송
 pip install python-telegram-bot  # 텔레그램 봇
 ```
+# 1
+장규수
