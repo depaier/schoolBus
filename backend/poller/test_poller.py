@@ -5,8 +5,8 @@
 import asyncio
 import signal
 import sys
-from poller_service import BusReservationPoller
-from notification_handler import NotificationHandler
+from .poller_service import BusReservationPoller
+from .notification_handler import NotificationHandler
 
 
 class PollerTester:

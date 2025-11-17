@@ -185,3 +185,5 @@ pip install python-telegram-bot  # 텔레그램 봇
 ```
 # 1
 장규수
+# 폴러 테스트 최신버전 ㅋㅋ
+python -m backend.poller.test_poller 5

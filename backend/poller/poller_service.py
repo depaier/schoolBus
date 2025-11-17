@@ -7,6 +7,9 @@ from datetime import datetime
 from typing import Optional, Callable, Dict, Any
 import logging
 
+# 🔥 추가된 부분: 예매 상태 불러오기
+from ..reservation_state import reservation_state  
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -44,13 +47,11 @@ class BusReservationPoller:
         Returns:
             예매 상태 정보 딕셔너리
         """
-        # TODO: 실제 통학버스 예매 시스템 API 호출 또는 웹 스크래핑
-        # 현재는 테스트를 위한 모의 데이터 반환
-        
+
         self.check_count += 1
         
-        # 테스트: 5번째 체크에서 예매가 열린 것으로 시뮬레이션
-        is_open = self.check_count >= 5
+        # 🔥 변경된 부분: 실제 예매 상태 사용
+        is_open = reservation_state["is_open"]
         
         status = {
             "timestamp": datetime.now().isoformat(),
@@ -100,7 +101,6 @@ class BusReservationPoller:
                 break
             except Exception as e:
                 logger.error(f"폴링 중 오류 발생: {e}", exc_info=True)
-                # 오류 발생 시에도 계속 실행
                 await asyncio.sleep(self.check_interval)
     
     async def _execute_callback(self, status: Dict[str, Any]):
