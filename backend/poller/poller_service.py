@@ -7,8 +7,13 @@ from datetime import datetime
 from typing import Optional, Callable, Dict, Any
 import logging
 
-# 🔥 추가된 부분: 예매 상태 불러오기
-from ..reservation_state import reservation_state  
+# 🔥 Supabase 클라이언트 import
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.supabase_client import get_supabase_client
+
+supabase = get_supabase_client()  
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,33 +46,68 @@ class BusReservationPoller:
         
     async def check_reservation_status(self) -> Dict[str, Any]:
         """
-        예매 오픈 상태를 체크하는 메서드
-        실제 구현시 API 호출 또는 웹 스크래핑 로직이 들어갈 자리
+        예매 오픈 상태를 체크하는 메서드 (Supabase에서 조회)
         
         Returns:
             예매 상태 정보 딕셔너리
         """
-
         self.check_count += 1
         
-        # 🔥 변경된 부분: 실제 예매 상태 사용
-        is_open = reservation_state["is_open"]
-        
-        status = {
-            "timestamp": datetime.now().isoformat(),
-            "is_open": is_open,
-            "check_count": self.check_count,
-            "route_info": {
+        try:
+            # 🔥 Supabase에서 예매 상태 조회
+            response = supabase.table("reservation_status").select("*").limit(1).execute()
+            
+            if response.data and len(response.data) > 0:
+                is_open = response.data[0]["is_open"]
+            else:
+                is_open = False
+                logger.warning("예매 상태 레코드가 없습니다. 기본값(False) 사용")
+            
+            # 오픈된 노선 정보 조회 (선택사항)
+            routes_response = supabase.table("bus_routes").select("*").eq("is_open", True).execute()
+            
+            route_info = {
                 "route_id": "ROUTE_001",
                 "route_name": "등교 노선 A",
                 "available_seats": 15 if is_open else 0,
                 "departure_time": "08:00",
             }
-        }
-        
-        logger.info(f"체크 #{self.check_count} - 예매 오픈 상태: {is_open}")
-        
-        return status
+            
+            # 실제 오픈된 노선이 있으면 첫 번째 노선 정보 사용
+            if routes_response.data and len(routes_response.data) > 0:
+                first_route = routes_response.data[0]
+                route_info = {
+                    "route_id": first_route["route_id"],
+                    "route_name": first_route["route_name"],
+                    "available_seats": first_route["available_seats"],
+                    "departure_time": str(first_route["departure_time"]),
+                }
+            
+            status = {
+                "timestamp": datetime.now().isoformat(),
+                "is_open": is_open,
+                "check_count": self.check_count,
+                "route_info": route_info
+            }
+            
+            logger.info(f"체크 #{self.check_count} - 예매 오픈 상태: {is_open}")
+            
+            return status
+            
+        except Exception as e:
+            logger.error(f"Supabase 조회 중 오류: {e}")
+            # 오류 발생 시 기본값 반환
+            return {
+                "timestamp": datetime.now().isoformat(),
+                "is_open": False,
+                "check_count": self.check_count,
+                "route_info": {
+                    "route_id": "ERROR",
+                    "route_name": "오류",
+                    "available_seats": 0,
+                    "departure_time": "00:00",
+                }
+            }
     
     async def _poll_loop(self):
         """
