@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './AdminPage.css'
+import axios from "axios";
 
 function AdminPage() {
   const [reservations, setReservations] = useState([
@@ -49,15 +50,29 @@ function AdminPage() {
     setStats({ totalRoutes, openRoutes, totalSeats, bookedSeats })
   }
 
-  const toggleReservation = (id) => {
-    setReservations(prev =>
-      prev.map(reservation =>
-        reservation.id === id
-          ? { ...reservation, isOpen: !reservation.isOpen }
-          : reservation
-      )
-    )
-  }
+  // 🔥 서버에 상태 업데이트 후 프론트도 상태 갱신
+  const toggleReservation = async (id) => {
+    const target = reservations.find(r => r.id === id);
+    const newState = !target.isOpen;
+
+    try {
+      await axios.post("http://localhost:8000/api/reservation/update", {
+        is_open: newState
+      });
+
+      setReservations(prev =>
+        prev.map(reservation =>
+          reservation.id === id
+            ? { ...reservation, isOpen: newState }
+            : reservation
+        )
+      );
+
+    } catch (err) {
+      console.error("예매 상태 변경 실패:", err);
+      alert("서버 연결 오류: 예매 상태 변경 실패");
+    }
+  };
 
   const updateSeats = (id, seats) => {
     const seatNumber = parseInt(seats)
@@ -66,10 +81,10 @@ function AdminPage() {
     setReservations(prev =>
       prev.map(reservation =>
         reservation.id === id
-          ? { 
-              ...reservation, 
+          ? {
+              ...reservation,
               totalSeats: seatNumber,
-              availableSeats: seatNumber 
+              availableSeats: seatNumber
             }
           : reservation
       )
@@ -149,7 +164,9 @@ function AdminPage() {
             type="number"
             placeholder="좌석 수"
             value={newRoute.totalSeats}
-            onChange={(e) => setNewRoute({ ...newRoute, totalSeats: parseInt(e.target.value) || 30 })}
+            onChange={(e) =>
+              setNewRoute({ ...newRoute, totalSeats: parseInt(e.target.value) || 30 })
+            }
             min="1"
           />
           <button onClick={addNewRoute} className="btn-add">노선 추가</button>
@@ -161,7 +178,10 @@ function AdminPage() {
         <h2>예매 관리</h2>
         <div className="reservations-grid">
           {reservations.map((reservation) => (
-            <div key={reservation.id} className={`reservation-card ${reservation.isOpen ? 'open' : 'closed'}`}>
+            <div
+              key={reservation.id}
+              className={`reservation-card ${reservation.isOpen ? 'open' : 'closed'}`}
+            >
               <div className="reservation-header">
                 <h3>{reservation.routeName}</h3>
                 <span className={`status-badge ${reservation.isOpen ? 'open' : 'closed'}`}>
@@ -194,6 +214,7 @@ function AdminPage() {
                   >
                     {reservation.isOpen ? '예매 닫기' : '예매 오픈'}
                   </button>
+
                   <button
                     onClick={() => deleteRoute(reservation.id)}
                     className="btn-delete"
@@ -202,6 +223,7 @@ function AdminPage() {
                     삭제
                   </button>
                 </div>
+
               </div>
             </div>
           ))}
