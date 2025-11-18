@@ -1,3 +1,7 @@
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import Home from './pages/Home'
+import AdminPage from './pages/AdminPage'
+import RegisterPage from './pages/RegisterPage'   // ⭐ 추가
 import { useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
