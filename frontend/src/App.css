@@ -60,3 +60,11 @@
 .read-the-docs {
   color: #888;
 }
+
+.App {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: white !important;   /* 선택: RegisterPage와 통일 */
+}
