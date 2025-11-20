@@ -24,6 +24,9 @@ function AdminPage() {
     }
   ])
 
+  // 🔥 검색어 상태 추가
+  const [search, setSearch] = useState("");
+
   const [newRoute, setNewRoute] = useState({
     routeName: '',
     departureTime: '',
@@ -117,12 +120,35 @@ function AdminPage() {
     }
   }
 
+  // 🔥 검색된 노선만 필터링
+  const filteredReservations = reservations.filter(r =>
+    r.routeName.toLowerCase().includes(search.toLowerCase()) ||
+    r.routeId.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="admin-page">
       <header className="admin-header">
         <h1>🚌 통학버스 관리자 페이지</h1>
         <p>예매 오픈/닫기 및 노선 관리</p>
       </header>
+
+      {/* 🔥 검색창 */}
+      <input
+        type="text"
+        placeholder="노선 검색 (노선명/노선ID)"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="search-input"
+        style={{
+          padding: "12px 16px",
+          width: "100%",
+          marginBottom: "20px",
+          border: "2px solid #ddd",
+          borderRadius: "8px",
+          fontSize: "1rem"
+        }}
+      />
 
       {/* 통계 대시보드 */}
       <div className="stats-container">
@@ -177,7 +203,9 @@ function AdminPage() {
       <div className="reservations-section">
         <h2>예매 관리</h2>
         <div className="reservations-grid">
-          {reservations.map((reservation) => (
+          
+          {/* 🔥 여기서 filteredReservations 사용 */}
+          {filteredReservations.map((reservation) => (
             <div
               key={reservation.id}
               className={`reservation-card ${reservation.isOpen ? 'open' : 'closed'}`}
@@ -229,10 +257,9 @@ function AdminPage() {
           ))}
         </div>
 
-        {reservations.length === 0 && (
+        {filteredReservations.length === 0 && (
           <div className="empty-state">
-            <p>등록된 노선이 없습니다.</p>
-            <p>위에서 새 노선을 추가해주세요.</p>
+            <p>일치하는 노선이 없습니다.</p>
           </div>
         )}
       </div>
