@@ -210,13 +210,16 @@ function Home() {
 
             <div className="form-group">
               <label>노선명</label>
-              <input 
-                type="text" 
+              <select 
                 className="form-input"
                 value={routeName}
                 onChange={(e) => setRouteName(e.target.value)}
-                placeholder="노선명을 입력하세요"
-              />
+              >
+              <option value="">선택</option>
+              <option value="A">서울</option>
+              <option value="B">인천</option>
+              <option value="C">안산</option>
+              </select>
             </div>
 
             <div className="form-group">
