@@ -134,17 +134,21 @@ async def update_user(student_id: str, user_update: UserUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"업데이트 실패: {str(e)}")
 
+class PushTokenUpdate(BaseModel):
+    fcm_token: Optional[str] = None
+    apn_token: Optional[str] = None
+
 @router.post("/users/{student_id}/token")
-async def update_push_token(student_id: str, fcm_token: Optional[str] = None, apn_token: Optional[str] = None):
+async def update_push_token(student_id: str, token_data: PushTokenUpdate):
     """
     푸시 알림 토큰 업데이트 (FCM 또는 APN)
     """
     try:
         update_data = {}
-        if fcm_token:
-            update_data["fcm_token"] = fcm_token
-        if apn_token:
-            update_data["apn_token"] = apn_token
+        if token_data.fcm_token:
+            update_data["fcm_token"] = token_data.fcm_token
+        if token_data.apn_token:
+            update_data["apn_token"] = token_data.apn_token
         
         if not update_data:
             raise HTTPException(status_code=400, detail="토큰 정보가 없습니다.")
@@ -156,7 +160,8 @@ async def update_push_token(student_id: str, fcm_token: Optional[str] = None, ap
         
         return {
             "message": "푸시 토큰이 업데이트되었습니다.",
-            "student_id": student_id
+            "student_id": student_id,
+            "token_type": "apn" if token_data.apn_token else "fcm"
         }
     except HTTPException:
         raise
