@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import { requestNotificationWithToken, getDeviceType } from '../utils/pushNotification'
 import './Home.css'
 
 function Home() {
@@ -19,6 +20,8 @@ function Home() {
   const [isPolling, setIsPolling] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState('default')
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false)
+  const [pushTokenInfo, setPushTokenInfo] = useState(null) // 푸시 토큰 정보
+  const [currentStudentId, setCurrentStudentId] = useState(null) // 현재 로그인한 학번
   const previousStatusRef = useRef(false) // 이전 상태를 추적
 
   // Push 알림 전송 함수
@@ -68,7 +71,7 @@ function Home() {
     }
   }
 
-  // 알림 권한 요청
+  // 알림 권한 요청 및 토큰 발급
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
       alert('이 브라우저는 알림을 지원하지 않습니다.')
@@ -76,27 +79,48 @@ function Home() {
     }
 
     try {
-      const permission = await Notification.requestPermission()
-      setNotificationPermission(permission)
-
-      if (permission === 'granted') {
-        setIsNotificationEnabled(true)
-        // 테스트 알림 전송
-        sendPushNotification(
-          '알림 설정 완료!',
-          '통학버스 예매 오픈 시 알림을 받을 수 있습니다.'
-        )
-      } else {
-        alert('알림 권한이 거부되었습니다. 브라우저 설정에서 알림을 허용해주세요.')
+      // 학번 입력 받기 (실제로는 로그인 시스템에서 가져와야 함)
+      const studentId = prompt('학번을 입력하세요 (예: 20240001):')
+      
+      if (!studentId || !studentId.trim()) {
+        alert('학번을 입력해야 알림을 받을 수 있습니다.')
+        return
       }
+
+      setCurrentStudentId(studentId)
+
+      // 푸시 토큰 발급 및 저장
+      const tokenInfo = await requestNotificationWithToken(studentId)
+      
+      setNotificationPermission(tokenInfo.permission)
+      setPushTokenInfo(tokenInfo)
+      setIsNotificationEnabled(true)
+
+      // 디바이스 타입에 따른 메시지
+      const deviceTypeMsg = tokenInfo.deviceType === 'ios' 
+        ? 'APN (Apple Push Notification)' 
+        : 'FCM (Firebase Cloud Messaging)'
+
+      // 테스트 알림 전송
+      sendPushNotification(
+        '✅ 알림 설정 완료!',
+        `${deviceTypeMsg} 토큰이 등록되었습니다. 예매 오픈 시 알림을 받을 수 있습니다.`
+      )
+
+      alert(`알림이 활성화되었습니다!\n디바이스: ${tokenInfo.deviceType}\n토큰: ${tokenInfo.token.substring(0, 20)}...`)
+
     } catch (err) {
       console.error('알림 권한 요청 실패:', err)
+      alert(err.message || '알림 설정에 실패했습니다.')
     }
   }
 
   // 알림 비활성화
   const disableNotification = () => {
     setIsNotificationEnabled(false)
+    setPushTokenInfo(null)
+    setCurrentStudentId(null)
+    alert('알림이 비활성화되었습니다.')
   }
 
   // 컴포넌트 마운트 시 알림 권한 상태 확인 및 노선 데이터 로드
