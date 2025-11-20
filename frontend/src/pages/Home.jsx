@@ -1,9 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import './Home.css'
 
 function Home() {
   const [reservations, setReservations] = useState([])
+  const [busType, setBusType] = useState('등교')
+  const [routeName, setRouteName] = useState('')
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [activeTab, setActiveTab] = useState('이용안내')
 
   const [reservationStatus, setReservationStatus] = useState({
     is_open: false,
@@ -161,10 +167,192 @@ function Home() {
 
   return (
     <div className="home-page">
+      {/* 헤더 */}
       <header className="home-header">
-        <h1>🚌 통학버스 예매 시스템</h1>
-        <p>실시간 예매 상태를 확인하세요</p>
+        <div className="header-content">
+          <div className="logo">한세대학교 통학버스</div>
+          <div className="header-info">
+            <span className="today-date">{new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</span>
+          </div>
+        </div>
       </header>
+
+      {/* 메인 컨텐츠 */}
+      <div className="main-layout">
+        {/* 좌측 사이드바 - 검색 */}
+        <aside className="sidebar-left">
+          <div className="search-section">
+            <h3>🔍 버스 조회</h3>
+            
+            <div className="form-group">
+              <label>구분</label>
+              <div className="radio-group">
+                <label className="radio-label">
+                  <input 
+                    type="radio" 
+                    value="등교" 
+                    checked={busType === '등교'}
+                    onChange={(e) => setBusType(e.target.value)}
+                  />
+                  <span>등교</span>
+                </label>
+                <label className="radio-label">
+                  <input 
+                    type="radio" 
+                    value="하교" 
+                    checked={busType === '하교'}
+                    onChange={(e) => setBusType(e.target.value)}
+                  />
+                  <span>하교</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>노선명</label>
+              <input 
+                type="text" 
+                className="form-input"
+                value={routeName}
+                onChange={(e) => setRouteName(e.target.value)}
+                placeholder="노선명을 입력하세요"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>조회 날짜</label>
+              <DatePicker
+                selected={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+                dateFormat="yyyy-MM-dd"
+                className="form-input date-input"
+              />
+            </div>
+
+            <button className="search-btn" onClick={fetchRoutes}>
+              🔍 조회하기
+            </button>
+          </div>
+
+          {/* 예매 상태 모니터링 */}
+          <div className="monitoring-mini">
+            <h4>실시간 모니터링</h4>
+            <div className="status-badge">
+              <span className={`status-dot ${reservationStatus.is_open ? 'open' : 'closed'}`}></span>
+              <span>{reservationStatus.is_open ? '예매 오픈' : '예매 마감'}</span>
+            </div>
+            {!isPolling ? (
+              <button className="btn-start-mini" onClick={startPolling}>
+                모니터링 시작
+              </button>
+            ) : (
+              <button className="btn-stop-mini" onClick={stopPolling}>
+                모니터링 중지
+              </button>
+            )}
+          </div>
+        </aside>
+
+        {/* 중앙 컨텐츠 */}
+        <main className="center-content">
+          <div className="info-section">
+            <div className="today-info">
+              <div className="info-label">TODAY</div>
+              <h2 className="info-date">{new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</h2>
+              <div className="contact-box">
+                <p className="contact-title">고객센터</p>
+                <p className="contact-tel">📞 TEL : 031-123-4567</p>
+                <p className="contact-email">✉️ bus@hsu.ac.kr</p>
+                <p className="contact-hours">⏰ 운영시간: 평일 09:00 ~ 18:00</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="notice-box">
+            <h3>📢 예약 시 주의사항</h3>
+            <div className="notice-content">
+              <p>※ 예약 마감은 버스 출발 10분 전까지 가능합니다.</p>
+              <p>※ 예약 없이 탑승 시 승차가 거부될 수 있습니다.</p>
+              <p>※ 취소 수수료 및 미탑승 위약금이 발생할 수 있습니다.</p>
+            </div>
+
+            <table className="notice-table">
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>등하교</th>
+                  <th>내용 및 수수료</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>예약</td>
+                  <td>공통</td>
+                  <td>버스 출발 10분 전까지 예약 가능</td>
+                </tr>
+                <tr>
+                  <td>예약 취소</td>
+                  <td>공통</td>
+                  <td>버스 출발 10분 전까지 취소 수수료 없음</td>
+                </tr>
+                <tr>
+                  <td>미탑승</td>
+                  <td>공통</td>
+                  <td>예약 후 미탑승 시 위약금 발생</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+
+        {/* 우측 사이드바 - 예약 */}
+        <aside className="sidebar-right">
+          <div className="reservation-panel">
+            <h3>🚌 배차 조회 / 신청</h3>
+            
+            <div className="tab-buttons">
+              <button 
+                className={activeTab === '이용안내' ? 'tab-btn active' : 'tab-btn'}
+                onClick={() => setActiveTab('이용안내')}
+              >
+                이용안내
+              </button>
+              <button 
+                className={activeTab === '개인정보' ? 'tab-btn active' : 'tab-btn'}
+                onClick={() => setActiveTab('개인정보')}
+              >
+                개인정보
+              </button>
+            </div>
+
+            <div className="routes-list">
+              {reservations.length === 0 ? (
+                <div className="empty-state">
+                  <p>🔍 노선을 먼저 조회해주세요</p>
+                </div>
+              ) : (
+                reservations.map((route) => (
+                  <div key={route.id} className="route-card-mini">
+                    <div className="route-header-mini">
+                      <h4>{route.routeName}</h4>
+                      <span className={`badge ${route.isOpen ? 'badge-open' : 'badge-closed'}`}>
+                        {route.isOpen ? '예매가능' : '마감'}
+                      </span>
+                    </div>
+                    <div className="route-info-mini">
+                      <p>🕐 출발: {route.departureTime}</p>
+                      <p>💺 좌석: {route.availableSeats}/{route.totalSeats}</p>
+                    </div>
+                    {route.isOpen && (
+                      <button className="btn-reserve">예약하기</button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </aside>
+      </div>
 
       {/* 알림 설정 섹션 */}
       <div className="notification-section">
