@@ -4,23 +4,65 @@
   min-height: 100vh;
 }
 
-.main-nav {
-  background: #333;
+.app {
+  min-height: 100vh;
+}
+
+/* 헤더 스타일 */
+.app-header {
+  background: #2c3e50;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 15px 30px;
   display: flex;
-  gap: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header-nav {
+  display: flex;
+  gap: 25px;
+  align-items: center;
 }
 
 .nav-link {
   color: white;
   text-decoration: none;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 6px;
-  font-weight: 600;
-  transition: background 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font-family: inherit;
 }
 
 .nav-link:hover {
-  background: #555;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }

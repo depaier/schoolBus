@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { requestNotificationWithToken, getDeviceType } from '../utils/pushNotification'
 import './Home.css'
 
-function Home() {
+function Home({ isLoggedIn }) {
+  const navigate = useNavigate()
   const [reservations, setReservations] = useState([])
   const [busType, setBusType] = useState('등교')
   const [routeName, setRouteName] = useState('')
@@ -138,6 +140,13 @@ function Home() {
 
   // 🔥 Supabase에서 노선 데이터 가져오기
   const fetchRoutes = async () => {
+    // 로그인하지 않은 경우 로그인 페이지로 이동
+    if (!isLoggedIn) {
+      alert('로그인이 필요한 서비스입니다.')
+      navigate('/login')
+      return
+    }
+
     try {
       const response = await axios.get('http://localhost:8000/api/routes')
       
@@ -191,22 +200,21 @@ function Home() {
 
   return (
     <div className="home-page">
-      {/* 헤더 */}
-      <header className="home-header">
-        <div className="header-content">
-          <div className="logo">한세대학교 통학버스</div>
-          <div className="header-info">
-            <span className="today-date">{new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</span>
-          </div>
-        </div>
-      </header>
-
       {/* 메인 컨텐츠 */}
       <div className="main-layout">
         {/* 좌측 사이드바 - 검색 */}
         <aside className="sidebar-left">
-          <div className="search-section">
-            <h3>🔍 버스 조회</h3>
+          {!isLoggedIn ? (
+            <div className="login-required-box">
+              <h3>🔒 로그인이 필요합니다</h3>
+              <p>노선 조회는 로그인 후 이용 가능합니다.</p>
+              <button className="btn-login-redirect" onClick={() => navigate('/login')}>
+                로그인하러 가기
+              </button>
+            </div>
+          ) : (
+            <div className="search-section">
+              <h3>🔍 버스 조회</h3>
             
             <div className="form-group">
               <label>구분</label>
@@ -260,8 +268,10 @@ function Home() {
               🔍 조회하기
             </button>
           </div>
+          )}
 
           {/* 예매 상태 모니터링 */}
+          {isLoggedIn && (
           <div className="monitoring-mini">
             <h4>실시간 모니터링</h4>
             <div className="status-badge">
@@ -278,6 +288,7 @@ function Home() {
               </button>
             )}
           </div>
+          )}
         </aside>
 
         {/* 중앙 컨텐츠 */}
