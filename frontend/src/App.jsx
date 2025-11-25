@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import AdminPage from './pages/AdminPage'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
+import ReservationPage from './pages/ReservationPage'
 import './App.css'
 
 function AppContent() {
@@ -50,7 +51,7 @@ function AppContent() {
                 </>
               ) : (
                 <>
-                  <Link to="/admin" className="nav-link">예약조회</Link>
+                  <Link to="/reservation" className="nav-link">예약조회</Link>
                   <button onClick={handleLogout} className="nav-link nav-button">로그아웃</button>
                   <span className="nav-link">정보 수정</span>
                 </>
@@ -63,6 +64,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/reservation" element={<ReservationPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>
