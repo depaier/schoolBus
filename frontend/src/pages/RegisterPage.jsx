@@ -94,6 +94,7 @@ function RegisterPage() {
       const response = await axios.post("http://localhost:8000/api/users/register", {
         student_id: formData.studentId,
         name: formData.name,
+        password: formData.password,
         email: formData.email || null,
         phone: phone
       });
@@ -161,7 +162,6 @@ function RegisterPage() {
                 placeholder="비밀번호를 입력하세요"
               />
               {errors.password && <div className="error-msg">{errors.password}</div>}
-              <div className="info-msg">※ 현재는 비밀번호를 저장하지 않습니다 (추후 인증 기능 추가 예정)</div>
             </td>
           </tr>
 
