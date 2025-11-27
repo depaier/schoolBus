@@ -3,26 +3,11 @@ import './AdminPage.css'
 import axios from "axios";
 
 function AdminPage() {
-  const [reservations, setReservations] = useState([
-    {
-      id: 1,
-      routeName: '등교 노선 A',
-      routeId: 'ROUTE_001',
-      departureTime: '08:00',
-      availableSeats: 30,
-      totalSeats: 30,
-      isOpen: false
-    },
-    {
-      id: 2,
-      routeName: '하교 노선 A',
-      routeId: 'ROUTE_002',
-      departureTime: '17:00',
-      availableSeats: 30,
-      totalSeats: 30,
-      isOpen: false
-    }
-  ])
+  const [reservations, setReservations] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // 🔥 검색어 상태 추가
+  const [search, setSearch] = useState("");
 
   const [newRoute, setNewRoute] = useState({
     routeName: '',
@@ -37,9 +22,40 @@ function AdminPage() {
     bookedSeats: 0
   })
 
+  // 🔥 컴포넌트 마운트 시 노선 데이터 로드
+  useEffect(() => {
+    fetchRoutes()
+  }, [])
+
   useEffect(() => {
     updateStats()
   }, [reservations])
+
+  // 🔥 Supabase에서 노선 데이터 가져오기
+  const fetchRoutes = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get('http://localhost:8000/api/routes')
+      
+      // 백엔드 데이터를 프론트엔드 형식으로 변환
+      const routes = response.data.routes.map(route => ({
+        id: route.id,
+        routeName: route.route_name,
+        routeId: route.route_id,
+        departureTime: route.departure_time,
+        availableSeats: route.available_seats,
+        totalSeats: route.total_seats,
+        isOpen: route.is_open
+      }))
+      
+      setReservations(routes)
+    } catch (err) {
+      console.error('노선 데이터 로드 실패:', err)
+      alert('노선 데이터를 불러오는데 실패했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const updateStats = () => {
     const totalRoutes = reservations.length
@@ -50,23 +66,23 @@ function AdminPage() {
     setStats({ totalRoutes, openRoutes, totalSeats, bookedSeats })
   }
 
-  // 🔥 서버에 상태 업데이트 후 프론트도 상태 갱신
+  // 🔥 특정 노선의 예매 오픈/닫기 토글
   const toggleReservation = async (id) => {
     const target = reservations.find(r => r.id === id);
-    const newState = !target.isOpen;
+    if (!target) return;
 
     try {
+      // 특정 노선의 상태 토글
+      await axios.post(`http://localhost:8000/api/routes/${target.routeId}/toggle`);
+
+      // 전체 예매 상태도 업데이트 (하나라도 오픈되면 전체 오픈)
+      const newState = !target.isOpen;
       await axios.post("http://localhost:8000/api/reservation/update", {
         is_open: newState
       });
 
-      setReservations(prev =>
-        prev.map(reservation =>
-          reservation.id === id
-            ? { ...reservation, isOpen: newState }
-            : reservation
-        )
-      );
+      // 데이터 다시 로드
+      await fetchRoutes();
 
     } catch (err) {
       console.error("예매 상태 변경 실패:", err);
@@ -74,48 +90,82 @@ function AdminPage() {
     }
   };
 
-  const updateSeats = (id, seats) => {
+  const updateSeats = async (id, seats) => {
     const seatNumber = parseInt(seats)
     if (isNaN(seatNumber) || seatNumber < 0) return
 
-    setReservations(prev =>
-      prev.map(reservation =>
-        reservation.id === id
-          ? {
-              ...reservation,
-              totalSeats: seatNumber,
-              availableSeats: seatNumber
-            }
-          : reservation
-      )
-    )
+    const target = reservations.find(r => r.id === id);
+    if (!target) return;
+
+    try {
+      await axios.put(`http://localhost:8000/api/routes/${target.routeId}`, {
+        total_seats: seatNumber,
+        available_seats: seatNumber
+      });
+
+      // 데이터 다시 로드
+      await fetchRoutes();
+    } catch (err) {
+      console.error("좌석 수 업데이트 실패:", err);
+      alert("좌석 수 업데이트에 실패했습니다.");
+    }
   }
 
-  const addNewRoute = () => {
+  const addNewRoute = async () => {
     if (!newRoute.routeName || !newRoute.departureTime) {
       alert('노선명과 출발시간을 입력해주세요.')
       return
     }
 
-    const newReservation = {
-      id: Date.now(),
-      routeName: newRoute.routeName,
-      routeId: `ROUTE_${String(reservations.length + 1).padStart(3, '0')}`,
-      departureTime: newRoute.departureTime,
-      availableSeats: newRoute.totalSeats,
-      totalSeats: newRoute.totalSeats,
-      isOpen: false
-    }
+    try {
+      const routeId = `ROUTE_${String(reservations.length + 1).padStart(3, '0')}`;
+      
+      await axios.post('http://localhost:8000/api/routes', {
+        route_name: newRoute.routeName,
+        route_id: routeId,
+        departure_time: newRoute.departureTime,
+        total_seats: newRoute.totalSeats
+      });
 
-    setReservations([...reservations, newReservation])
-    setNewRoute({ routeName: '', departureTime: '', totalSeats: 30 })
+      // 데이터 다시 로드
+      await fetchRoutes();
+      
+      // 입력 필드 초기화
+      setNewRoute({ routeName: '', departureTime: '', totalSeats: 30 });
+      
+      alert('노선이 추가되었습니다.');
+    } catch (err) {
+      console.error('노선 추가 실패:', err);
+      alert('노선 추가에 실패했습니다.');
+    }
   }
 
-  const deleteRoute = (id) => {
-    if (window.confirm('정말 이 노선을 삭제하시겠습니까?')) {
-      setReservations(prev => prev.filter(r => r.id !== id))
+  const deleteRoute = async (id) => {
+    if (!window.confirm('정말 이 노선을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    const target = reservations.find(r => r.id === id);
+    if (!target) return;
+
+    try {
+      await axios.delete(`http://localhost:8000/api/routes/${target.routeId}`);
+      
+      // 데이터 다시 로드
+      await fetchRoutes();
+      
+      alert('노선이 삭제되었습니다.');
+    } catch (err) {
+      console.error('노선 삭제 실패:', err);
+      alert('노선 삭제에 실패했습니다.');
     }
   }
+
+  // 🔥 검색된 노선만 필터링
+  const filteredReservations = reservations.filter(r =>
+    r.routeName.toLowerCase().includes(search.toLowerCase()) ||
+    r.routeId.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="admin-page">
@@ -123,6 +173,23 @@ function AdminPage() {
         <h1>🚌 통학버스 관리자 페이지</h1>
         <p>예매 오픈/닫기 및 노선 관리</p>
       </header>
+
+      {/* 🔥 검색창 */}
+      <input
+        type="text"
+        placeholder="노선 검색 (노선명/노선ID)"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="search-input"
+        style={{
+          padding: "12px 16px",
+          width: "100%",
+          marginBottom: "20px",
+          border: "2px solid #ddd",
+          borderRadius: "8px",
+          fontSize: "1rem"
+        }}
+      />
 
       {/* 통계 대시보드 */}
       <div className="stats-container">
@@ -177,7 +244,9 @@ function AdminPage() {
       <div className="reservations-section">
         <h2>예매 관리</h2>
         <div className="reservations-grid">
-          {reservations.map((reservation) => (
+          
+          {/* 🔥 여기서 filteredReservations 사용 */}
+          {filteredReservations.map((reservation) => (
             <div
               key={reservation.id}
               className={`reservation-card ${reservation.isOpen ? 'open' : 'closed'}`}
@@ -229,10 +298,9 @@ function AdminPage() {
           ))}
         </div>
 
-        {reservations.length === 0 && (
+        {filteredReservations.length === 0 && (
           <div className="empty-state">
-            <p>등록된 노선이 없습니다.</p>
-            <p>위에서 새 노선을 추가해주세요.</p>
+            <p>일치하는 노선이 없습니다.</p>
           </div>
         )}
       </div>

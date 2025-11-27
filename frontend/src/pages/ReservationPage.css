@@ -1,0 +1,328 @@
+/* src/ReservationPage.css */
+
+/* 1. Design Tokens based on JSON */
+:root {
+  --primary-dark: #1b1b1b;
+  --primary-black: #000000;
+  --secondary-bg: #f5f5f5;
+  --white: #ffffff;
+  --border-gray: #cccccc;
+  --accent-blue: #0066cc;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  
+  --font-family: 'Dotum', '돋움', sans-serif;
+  --font-size-body: 13px;
+  --font-size-heading: 24px;
+}
+
+/* 2. Global Reset & Typography */
+.hsu-container {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  background-color: var(--white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* 3. Header */
+.hsu-header {
+  background-color: var(--primary-dark);
+  color: var(--white);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.hsu-logo {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.hsu-nav ul {
+  display: flex;
+  gap: 20px;
+}
+
+.hsu-nav li a {
+  color: var(--white);
+  font-size: 12px;
+}
+
+.hsu-nav li a:hover {
+  text-decoration: underline;
+}
+
+/* 4. Main Layout */
+.hsu-main-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 30px 20px;
+  display: flex;
+  gap: 30px; /* Section Gap */
+}
+
+/* Left Column (Search & Notice) - 45% */
+.hsu-left-col {
+  width: 45%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Right Column (Table) - 55% */
+.hsu-right-col {
+  width: 55%;
+}
+
+/* 5. Section Styles */
+.section-title {
+  font-size: var(--font-size-heading);
+  font-weight: bold;
+  border-bottom: 2px solid var(--primary-black);
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+/* 6. Form Components */
+.search-box {
+  background: var(--white);
+}
+
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.form-label {
+  width: 100px;
+  font-weight: bold;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.form-input-text {
+  border: 1px solid var(--border-gray);
+  padding: 8px;
+  font-size: 13px;
+  flex: 1;
+  background: var(--white);
+  border-radius: 0;
+
+  /* 글자색을 검정으로 지정 */
+  color: #000000;
+}
+
+/* --- 커스텀 셀렉트 박스 (세로 리스트) --- */
+.custom-select-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.custom-select-trigger {
+  border: 1px solid var(--border-gray);
+  padding: 8px;
+  font-size: 13px;
+  background: var(--white);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.arrow-icon {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+.custom-dropdown-grid {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--primary-black);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.grid-item {
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  background-color: var(--white);
+}
+
+.grid-item:last-child {
+  border-bottom: none;
+}
+
+.grid-item:hover {
+  background-color: var(--secondary-bg);
+  font-weight: bold;
+  color: var(--accent-blue);
+}
+
+.grid-item.selected {
+  background-color: var(--primary-black);
+  color: var(--white);
+}
+
+/* Radio Buttons */
+.radio-group label {
+  margin-right: 15px;
+  cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+  accent-color: var(--accent-blue);
+  margin-right: 5px;
+}
+
+/* Primary Button (검색하기) */
+.btn-primary {
+  background-color: var(--primary-black);
+  color: var(--white);
+  border: none;
+  padding: 10px 30px;
+  font-size: 13px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* 7. Notice Section */
+.notice-box {
+  background-color: var(--secondary-bg);
+  border: 1px solid var(--border-gray);
+  padding: 20px;
+}
+
+.notice-title {
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--primary-black);
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.notice-list {
+  list-style: disc;
+  padding-left: 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* 8. Table Section */
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 2px solid var(--border-gray);
+  font-size: 13px;
+}
+
+.schedule-table th {
+  background-color: var(--secondary-bg);
+  color: var(--primary-black);
+  font-weight: bold;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-gray);
+  text-align: center;
+}
+
+.schedule-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border-gray);
+  text-align: center;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.schedule-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+
+
+/* [추가] 빨간색 예약 버튼 스타일 */
+.btn-reserve-red {
+  background-color: #d32f2f; /* 강렬한 빨강 */
+  color: var(--white);
+  border: none; /* 테두리 없음 */
+  padding: 6px 15px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  min-width: 60px;
+}
+
+.btn-reserve-red:hover {
+  background-color: #b71c1c; /* 마우스 올리면 더 진하게 */
+}
+
+.btn-reserve-red:disabled {
+  background-color: #cccccc; /* 비활성화 시 회색 */
+  cursor: not-allowed;
+}
+
+/* 페이지네이션용 기존 버튼 유지 */
+.btn-book {
+  background-color: var(--white);
+  border: 1px solid var(--border-gray);
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-book:hover {
+  background-color: var(--primary-black);
+  color: var(--white);
+}
+
+.status-available {
+  color: var(--accent-blue);
+  font-weight: bold;
+}
+
+/* 9. Footer */
+.hsu-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border-gray);
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
