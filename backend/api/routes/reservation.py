@@ -2,15 +2,12 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
-import sys
-import os
-
-# Supabase 클라이언트 import
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config.supabase_client import get_supabase_client
+import logging
+from config.supabase_client import supabase
+from services.web_push_service import web_push_service
 
 router = APIRouter()
-supabase = get_supabase_client()
+logger = logging.getLogger(__name__)
 
 class ReservationUpdate(BaseModel):
     is_open: bool
@@ -49,16 +46,33 @@ async def update_reservation_status(body: ReservationUpdate):
     예매 상태 변경 (열림/닫힘) - Supabase
     """
     try:
-        # 첫 번째 레코드 조회
-        response = supabase.table("reservation_status").select("id").limit(1).execute()
+        # 첫 번째 레코드 조회 (이전 상태 확인용)
+        response = supabase.table("reservation_status").select("id, is_open").limit(1).execute()
         
         if response.data and len(response.data) > 0:
+            # 이전 상태 저장
+            previous_status = response.data[0]["is_open"]
+            
             # 기존 레코드 업데이트
             status_id = response.data[0]["id"]
             updated = supabase.table("reservation_status").update({
                 "is_open": body.is_open,
                 "updated_at": datetime.now().isoformat()
             }).eq("id", status_id).execute()
+            
+            # 🔥 닫혀있었는데 열린 경우 푸시 알림 전송
+            if not previous_status and body.is_open:
+                logger.info("예매 오픈 감지 - 푸시 알림 전송 시작")
+                try:
+                    result = await web_push_service.send_to_all_users(
+                        supabase,
+                        "🎉 통학버스 예매 오픈!",
+                        "통학버스 예매가 오픈되었습니다. 지금 바로 예매하세요!"
+                    )
+                    logger.info(f"푸시 알림 전송 결과: {result}")
+                except Exception as e:
+                    logger.error(f"푸시 알림 전송 실패: {e}")
+                    # 알림 실패해도 상태 업데이트는 성공으로 처리
             
             return {
                 "message": "예매 상태가 변경되었습니다.",

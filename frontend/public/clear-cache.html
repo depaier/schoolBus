@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캐시 초기화</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #cc0000;
+        }
+        .success {
+            color: green;
+            margin-top: 20px;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧹 캐시 및 Service Worker 초기화</h1>
+    
+    <div class="info">
+        <p>모바일에서 회색 화면이 보이면 이 페이지에서 캐시를 초기화하세요.</p>
+    </div>
+
+    <button onclick="clearAll()">모든 캐시 삭제</button>
+    <button onclick="unregisterSW()">Service Worker 해제</button>
+    <button onclick="clearAndReload()">초기화 후 새로고침</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function clearAll() {
+            try {
+                // 모든 캐시 삭제
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                
+                document.getElementById('result').innerHTML = 
+                    '<p class="success">✅ 모든 캐시가 삭제되었습니다!</p>';
+                
+                console.log('캐시 삭제 완료:', cacheNames);
+            } catch (err) {
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: red;">❌ 캐시 삭제 실패: ' + err.message + '</p>';
+                console.error('캐시 삭제 실패:', err);
+            }
+        }
+
+        async function unregisterSW() {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                    
+                    document.getElementById('result').innerHTML = 
+                        '<p class="success">✅ Service Worker가 해제되었습니다!</p>';
+                    
+                    console.log('Service Worker 해제 완료:', registrations.length);
+                } else {
+                    document.getElementById('result').innerHTML = 
+                        '<p>Service Worker를 지원하지 않는 브라우저입니다.</p>';
+                }
+            } catch (err) {
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: red;">❌ Service Worker 해제 실패: ' + err.message + '</p>';
+                console.error('Service Worker 해제 실패:', err);
+            }
+        }
+
+        async function clearAndReload() {
+            try {
+                // 캐시 삭제
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                
+                // Service Worker 해제
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                }
+                
+                // localStorage 초기화 (선택사항)
+                // localStorage.clear();
+                
+                document.getElementById('result').innerHTML = 
+                    '<p class="success">✅ 초기화 완료! 3초 후 홈으로 이동합니다...</p>';
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+                
+            } catch (err) {
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: red;">❌ 초기화 실패: ' + err.message + '</p>';
+                console.error('초기화 실패:', err);
+            }
+        }
+
+        // 페이지 로드 시 현재 상태 표시
+        window.addEventListener('load', async () => {
+            let status = '<div class="info"><h3>현재 상태</h3>';
+            
+            // 캐시 확인
+            const cacheNames = await caches.keys();
+            status += '<p>캐시: ' + (cacheNames.length > 0 ? cacheNames.join(', ') : '없음') + '</p>';
+            
+            // Service Worker 확인
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                status += '<p>Service Worker: ' + registrations.length + '개 등록됨</p>';
+            }
+            
+            status += '</div>';
+            
+            document.body.insertAdjacentHTML('beforeend', status);
+        });
+    </script>
+</body>
+</html>

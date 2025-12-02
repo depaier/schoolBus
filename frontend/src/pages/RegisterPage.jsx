@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../utils/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import "./RegisterPage.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -91,7 +93,7 @@ function RegisterPage() {
       const phone = `${formData.phone1}-${formData.phone2}-${formData.phone3}`;
 
       // API 호출
-      const response = await axios.post("http://localhost:8000/api/users/register", {
+      const response = await axios.post(`${API_BASE_URL}/api/users/register`, {
         student_id: formData.studentId,
         name: formData.name,
         password: formData.password,

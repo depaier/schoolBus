@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios from '../utils/axiosConfig'
 import './LoginPage.css'
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function LoginPage() {
   const navigate = useNavigate()
@@ -35,7 +37,7 @@ function LoginPage() {
     setError('')
 
     try {
-      const response = await axios.post('http://localhost:8000/api/users/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/users/login`, {
         student_id: formData.student_id,
         password: formData.password
       })
@@ -49,8 +51,8 @@ function LoginPage() {
       
       alert(`환영합니다, ${userData.name}님!`)
       
-      // 홈 페이지로 이동
-      navigate('/')
+      // 홈 페이지로 직접 이동 (새로고침 없이)
+      window.location.href = '/'
       
     } catch (err) {
       console.error('로그인 실패:', err)
