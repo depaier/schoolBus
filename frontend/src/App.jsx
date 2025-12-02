@@ -5,6 +5,7 @@ import AdminPage from './pages/AdminPage'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
 import ReservationPage from './pages/ReservationPage'
+import DebugPage from './pages/DebugPage'
 import './App.css'
 
 function AppContent() {
@@ -13,7 +14,7 @@ function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null)
 
-  // 로그인 상태 확인
+  // 로그인 상태 확인 (컴포넌트 마운트 시 한 번만 실행)
   useEffect(() => {
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true'
     const userData = localStorage.getItem('user')
@@ -22,12 +23,19 @@ function AppContent() {
       setIsLoggedIn(true)
       setUser(JSON.parse(userData))
     }
-  }, [location])
+  }, []) // 빈 배열로 변경하여 초기 마운트 시에만 실행
 
   // 로그아웃 처리
   const handleLogout = () => {
+    // 로그인 관련 정보 제거
     localStorage.removeItem('isLoggedIn')
     localStorage.removeItem('user')
+    // 알림 관련 정보 제거
+    localStorage.removeItem('isNotificationEnabled')
+    localStorage.removeItem('pushTokenInfo')
+    localStorage.removeItem('currentStudentId')
+    localStorage.removeItem('isPolling')
+    
     setIsLoggedIn(false)
     setUser(null)
     alert('로그아웃되었습니다.')
@@ -67,6 +75,7 @@ function AppContent() {
         <Route path="/reservation" element={<ReservationPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/debug" element={<DebugPage />} />
       </Routes>
     </div>
   )

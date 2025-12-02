@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import './AdminPage.css'
-import axios from "axios";
+import axios from "../utils/axiosConfig";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function AdminPage() {
   const [reservations, setReservations] = useState([])
@@ -24,6 +26,7 @@ function AdminPage() {
 
   // 🔥 컴포넌트 마운트 시 노선 데이터 로드
   useEffect(() => {
+    console.log('🌐 관리자 페이지 - 사용 중인 API URL:', API_BASE_URL)
     fetchRoutes()
   }, [])
 
@@ -35,7 +38,14 @@ function AdminPage() {
   const fetchRoutes = async () => {
     try {
       setLoading(true)
-      const response = await axios.get('http://localhost:8000/api/routes')
+      console.log('📡 관리자 페이지 - API 요청:', `${API_BASE_URL}/api/routes`)
+      const response = await axios.get(`${API_BASE_URL}/api/routes`)
+      console.log('✅ 관리자 페이지 - 응답:', response.data)
+      
+      // 응답 데이터 검증
+      if (!response.data || !response.data.routes) {
+        throw new Error('API 응답 형식이 올바르지 않습니다: routes 배열이 없음')
+      }
       
       // 백엔드 데이터를 프론트엔드 형식으로 변환
       const routes = response.data.routes.map(route => ({
@@ -48,10 +58,13 @@ function AdminPage() {
         isOpen: route.is_open
       }))
       
+      console.log('✅ 변환된 노선 데이터:', routes)
       setReservations(routes)
     } catch (err) {
-      console.error('노선 데이터 로드 실패:', err)
-      alert('노선 데이터를 불러오는데 실패했습니다.')
+      console.error('❌ 노선 데이터 로드 실패:', err)
+      console.error('에러 상세:', err.response?.data || err.message)
+      console.error('전체 에러 객체:', err)
+      alert(`노선 데이터를 불러오는데 실패했습니다.\n에러: ${err.message}\nAPI URL: ${API_BASE_URL}`)
     } finally {
       setLoading(false)
     }
@@ -73,16 +86,21 @@ function AdminPage() {
 
     try {
       // 특정 노선의 상태 토글
-      await axios.post(`http://localhost:8000/api/routes/${target.routeId}/toggle`);
+      await axios.post(`${API_BASE_URL}/api/routes/${target.routeId}/toggle`);
 
-      // 전체 예매 상태도 업데이트 (하나라도 오픈되면 전체 오픈)
-      const newState = !target.isOpen;
-      await axios.post("http://localhost:8000/api/reservation/update", {
-        is_open: newState
+      // 데이터 다시 로드하여 최신 상태 가져오기
+      await fetchRoutes();
+
+      // 전체 예매 상태 업데이트 (하나라도 오픈되면 전체 오픈)
+      // fetchRoutes 후 reservations가 업데이트되기 전이므로 API로 다시 확인
+      const routesResponse = await axios.get(`${API_BASE_URL}/api/routes`);
+      const hasOpenRoute = routesResponse.data.routes.some(route => route.is_open);
+      
+      await axios.post(`${API_BASE_URL}/api/reservation/update`, {
+        is_open: hasOpenRoute
       });
 
-      // 데이터 다시 로드
-      await fetchRoutes();
+      console.log(`전체 예매 상태 업데이트: ${hasOpenRoute ? '오픈' : '마감'}`);
 
     } catch (err) {
       console.error("예매 상태 변경 실패:", err);
@@ -98,7 +116,7 @@ function AdminPage() {
     if (!target) return;
 
     try {
-      await axios.put(`http://localhost:8000/api/routes/${target.routeId}`, {
+      await axios.put(`${API_BASE_URL}/api/routes/${target.routeId}`, {
         total_seats: seatNumber,
         available_seats: seatNumber
       });
@@ -120,7 +138,7 @@ function AdminPage() {
     try {
       const routeId = `ROUTE_${String(reservations.length + 1).padStart(3, '0')}`;
       
-      await axios.post('http://localhost:8000/api/routes', {
+      await axios.post(`${API_BASE_URL}/api/routes`, {
         route_name: newRoute.routeName,
         route_id: routeId,
         departure_time: newRoute.departureTime,
@@ -149,7 +167,7 @@ function AdminPage() {
     if (!target) return;
 
     try {
-      await axios.delete(`http://localhost:8000/api/routes/${target.routeId}`);
+      await axios.delete(`${API_BASE_URL}/api/routes/${target.routeId}`);
       
       // 데이터 다시 로드
       await fetchRoutes();

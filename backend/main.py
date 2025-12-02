@@ -7,7 +7,7 @@ app = FastAPI(title="SchoolBus API", version="1.0.0")
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite 기본 포트
+    allow_origins=["*"],  # 모든 origin 허용 (개발/테스트용)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

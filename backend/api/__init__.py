@@ -5,6 +5,7 @@ from .routes import reservation   # 🔥 예매 상태 라우트
 from .routes import bus_routes    # 🔥 버스 노선 라우트
 from .routes import users          # 🔥 회원 관리 라우트
 from .routes import bookings       # 🔥 예약(예매) 라우트
+from .routes import push_notification  # 🔥 푸시 알림 라우트
 
 router = APIRouter()
 
@@ -25,3 +26,6 @@ router.include_router(users.router, tags=["users"])
 
 # 🔥 예약(예매) 라우트
 router.include_router(bookings.router, tags=["bookings"])
+
+# 🔥 푸시 알림 라우트
+router.include_router(push_notification.router, tags=["push_notification"])

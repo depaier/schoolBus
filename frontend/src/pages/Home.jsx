@@ -1,12 +1,52 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Component } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios from '../utils/axiosConfig'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { requestNotificationWithToken, getDeviceType } from '../utils/pushNotification'
+import { requestNotificationWithToken, getDeviceType, isIOSStandalone } from '../utils/webPushNotification'
 import './Home.css'
 
-function Home({ isLoggedIn }) {
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+// 에러 바운더리 컴포넌트
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('❌ Home 페이지 에러:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '50px', textAlign: 'center' }}>
+          <h1>⚠️ 페이지 로딩 오류</h1>
+          <p>페이지를 불러오는 중 문제가 발생했습니다.</p>
+          <p style={{ color: 'red', fontSize: '14px' }}>{this.state.error?.message}</p>
+          <button onClick={() => window.location.reload()} style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            marginTop: '20px',
+            cursor: 'pointer'
+          }}>
+            새로고침
+          </button>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+function HomeContent({ isLoggedIn }) {
   const navigate = useNavigate()
   const [reservations, setReservations] = useState([])
   const [busType, setBusType] = useState('등교')
@@ -19,57 +59,19 @@ function Home({ isLoggedIn }) {
     updated_at: null
   })
 
-  const [isPolling, setIsPolling] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState('default')
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false)
   const [pushTokenInfo, setPushTokenInfo] = useState(null) // 푸시 토큰 정보
   const [currentStudentId, setCurrentStudentId] = useState(null) // 현재 로그인한 학번
-  const previousStatusRef = useRef(false) // 이전 상태를 추적
 
-  // Push 알림 전송 함수
-  const sendPushNotification = (title, body) => {
-    if (Notification.permission === 'granted') {
-      const notification = new Notification(title, {
-        body: body,
-        icon: '🚌',
-        badge: '🚌',
-        tag: 'bus-reservation',
-        requireInteraction: true,
-        vibrate: [200, 100, 200]
-      })
-
-      notification.onclick = () => {
-        window.focus()
-        notification.close()
-      }
-
-      // 5초 후 자동 닫기
-      setTimeout(() => notification.close(), 5000)
-    }
-  }
-
-  // 예매 상태를 폴링하는 함수
-  const checkReservationStatus = async () => {
+  // 예매 상태 조회 (한 번만)
+  const fetchReservationStatus = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/reservation/status')
-      const newStatus = response.data
-      
-      setReservationStatus(newStatus)
-
-      // 🔥 핵심: 이전에 닫혀있었는데 지금 열린 경우에만 Push 알림
-      if (!previousStatusRef.current && newStatus.is_open && isNotificationEnabled) {
-        sendPushNotification(
-          '🎉 통학버스 예매 오픈!',
-          '통학버스 예매가 오픈되었습니다. 지금 바로 예매하세요!'
-        )
-        console.log('예매 오픈 감지 - Push 알림 전송:', newStatus)
-      }
-
-      // 현재 상태를 이전 상태로 저장
-      previousStatusRef.current = newStatus.is_open
-
+      const response = await axios.get(`${API_BASE_URL}/api/reservation/status`)
+      setReservationStatus(response.data)
+      console.log('✅ 예매 상태:', response.data.is_open ? '오픈' : '마감')
     } catch (err) {
-      console.error('예매 상태 체크 실패:', err)
+      console.error('❌ 예매 상태 조회 실패:', err)
     }
   }
 
@@ -81,39 +83,77 @@ function Home({ isLoggedIn }) {
     }
 
     try {
-      // 학번 입력 받기 (실제로는 로그인 시스템에서 가져와야 함)
-      const studentId = prompt('학번을 입력하세요 (예: 20240001):')
+      // 로그인된 유저 정보에서 학번 가져오기
+      const userStr = localStorage.getItem('user')
+      if (!userStr) {
+        alert('로그인이 필요합니다.')
+        navigate('/login')
+        return
+      }
+
+      const user = JSON.parse(userStr)
+      const studentId = user.student_id
       
-      if (!studentId || !studentId.trim()) {
-        alert('학번을 입력해야 알림을 받을 수 있습니다.')
+      if (!studentId) {
+        alert('학번 정보를 찾을 수 없습니다. 다시 로그인해주세요.')
         return
       }
 
       setCurrentStudentId(studentId)
+      
+      console.log('🔔 알림 활성화 시작:', { studentId, deviceType: getDeviceType() })
 
-      // 푸시 토큰 발급 및 저장
+      // 푸시 구독 생성 및 저장
       const tokenInfo = await requestNotificationWithToken(studentId)
+      
+      console.log('✅ 푸시 구독 성공:', tokenInfo)
       
       setNotificationPermission(tokenInfo.permission)
       setPushTokenInfo(tokenInfo)
       setIsNotificationEnabled(true)
+      
+      // 🔥 localStorage에 알림 상태 저장
+      localStorage.setItem('isNotificationEnabled', 'true')
+      localStorage.setItem('pushTokenInfo', JSON.stringify(tokenInfo))
+      localStorage.setItem('currentStudentId', studentId)
 
-      // 디바이스 타입에 따른 메시지
-      const deviceTypeMsg = tokenInfo.deviceType === 'ios' 
-        ? 'APN (Apple Push Notification)' 
-        : 'FCM (Firebase Cloud Messaging)'
+      // 성공 메시지
+      const deviceMsg = tokenInfo.deviceType === 'ios' 
+        ? 'iOS (제한적 지원)' 
+        : tokenInfo.deviceType === 'android'
+        ? 'Android'
+        : 'PC'
 
-      // 테스트 알림 전송
-      sendPushNotification(
-        '✅ 알림 설정 완료!',
-        `${deviceTypeMsg} 토큰이 등록되었습니다. 예매 오픈 시 알림을 받을 수 있습니다.`
-      )
-
-      alert(`알림이 활성화되었습니다!\n디바이스: ${tokenInfo.deviceType}\n토큰: ${tokenInfo.token.substring(0, 20)}...`)
+      alert(`✅ 알림이 활성화되었습니다!\n\n디바이스: ${deviceMsg}\n\n예매가 오픈되면 자동으로 알림을 받습니다.${tokenInfo.deviceType === 'ios' ? '\n\n⚠️ iOS는 앱이 실행 중일 때만 알림을 받을 수 있습니다.' : '\n\n브라우저를 닫아도 알림을 받을 수 있습니다!'}`)
 
     } catch (err) {
-      console.error('알림 권한 요청 실패:', err)
-      alert(err.message || '알림 설정에 실패했습니다.')
+      console.error('❌ 알림 설정 실패:', err)
+      console.error('에러 상세:', {
+        message: err.message,
+        stack: err.stack,
+        response: err.response?.data
+      })
+      
+      // 사용자 친화적 에러 메시지
+      let errorMsg = '알림 설정에 실패했습니다.\n\n'
+      
+      if (err.message.includes('Service Worker')) {
+        errorMsg += '브라우저가 Service Worker를 지원하지 않습니다.\nChrome, Edge, Firefox를 사용해주세요.'
+      } else if (err.message.includes('PushManager')) {
+        errorMsg += '브라우저가 푸시 알림을 지원하지 않습니다.'
+      } else if (err.message.includes('거부')) {
+        errorMsg += '알림 권한이 거부되었습니다.\n브라우저 설정에서 알림을 허용해주세요.'
+      } else if (err.message.includes('VAPID')) {
+        errorMsg += 'VAPID 키 설정 오류입니다.\n관리자에게 문의하세요.'
+      } else if (err.response?.status === 404) {
+        errorMsg += '사용자 정보를 찾을 수 없습니다.\n다시 로그인해주세요.'
+      } else if (err.response?.status === 500) {
+        errorMsg += '서버 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.'
+      } else {
+        errorMsg += err.message || '알 수 없는 오류가 발생했습니다.'
+      }
+      
+      alert(errorMsg)
     }
   }
 
@@ -122,33 +162,71 @@ function Home({ isLoggedIn }) {
     setIsNotificationEnabled(false)
     setPushTokenInfo(null)
     setCurrentStudentId(null)
+    // localStorage에서 알림 상태 제거
+    localStorage.removeItem('isNotificationEnabled')
+    localStorage.removeItem('pushTokenInfo')
+    localStorage.removeItem('currentStudentId')
     alert('알림이 비활성화되었습니다.')
   }
 
   // 컴포넌트 마운트 시 알림 권한 상태 확인 및 노선 데이터 로드
   useEffect(() => {
+    // 🔥 API URL 확인 (디버깅용)
+    console.log('🌐 사용 중인 API URL:', API_BASE_URL)
+    console.log('📱 디바이스 타입:', getDeviceType())
+    console.log('🔐 로그인 상태 (props):', isLoggedIn)
+    console.log('🔐 로그인 상태 (localStorage):', localStorage.getItem('isLoggedIn'))
+    
     if ('Notification' in window) {
       setNotificationPermission(Notification.permission)
-      if (Notification.permission === 'granted') {
-        // 권한이 이미 있으면 자동으로 활성화하지 않음 (사용자가 버튼 클릭해야 함)
-      }
     }
     
-    // 🔥 노선 데이터 로드
+    // 🔥 localStorage에서 알림 활성화 상태 복원
+    const savedNotificationEnabled = localStorage.getItem('isNotificationEnabled') === 'true'
+    const savedPushTokenInfo = localStorage.getItem('pushTokenInfo')
+    const savedStudentId = localStorage.getItem('currentStudentId')
+    
+    if (savedNotificationEnabled && savedPushTokenInfo && savedStudentId) {
+      setIsNotificationEnabled(true)
+      setPushTokenInfo(JSON.parse(savedPushTokenInfo))
+      setCurrentStudentId(savedStudentId)
+      console.log('✅ 알림 활성화 상태 복원됨')
+    }
+    
+    // 🔥 노선 데이터 및 예매 상태 로드
     fetchRoutes()
+    fetchReservationStatus()
   }, [])
+  
+  // 🔥 isLoggedIn이 변경될 때마다 노선 데이터 다시 로드
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log('✅ 로그인 상태 변경 감지 - 노선 데이터 로드')
+      fetchRoutes()
+    }
+  }, [isLoggedIn])
 
   // 🔥 Supabase에서 노선 데이터 가져오기
   const fetchRoutes = async () => {
-    // 로그인하지 않은 경우 로그인 페이지로 이동
-    if (!isLoggedIn) {
-      alert('로그인이 필요한 서비스입니다.')
-      navigate('/login')
+    // localStorage에서 직접 로그인 상태 확인 (props보다 신뢰성 높음)
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true'
+    
+    if (!loggedIn) {
+      console.log('⚠️ 로그인되지 않음 - 로그인 페이지로 이동')
+      // alert 제거 - 페이지 로드 시 불필요한 알림 방지
+      // navigate('/login')
       return
     }
 
     try {
-      const response = await axios.get('http://localhost:8000/api/routes')
+      const response = await axios.get(`${API_BASE_URL}/api/routes`)
+      console.log('✅ Home - 노선 API 응답:', response.data)
+      
+      // 응답 데이터 검증
+      if (!response.data || !response.data.routes) {
+        console.error('❌ API 응답 형식이 올바르지 않습니다:', response.data)
+        return
+      }
       
       // 백엔드 데이터를 프론트엔드 형식으로 변환
       const routes = response.data.routes.map(route => ({
@@ -161,42 +239,19 @@ function Home({ isLoggedIn }) {
         isOpen: route.is_open
       }))
       
+      console.log('✅ Home - 변환된 노선:', routes)
       setReservations(routes)
     } catch (err) {
-      console.error('노선 데이터 로드 실패:', err)
+      console.error('❌ 노선 데이터 로드 실패:', err)
+      console.error('에러 상세:', err.response?.data || err.message)
     }
   }
 
-  // 폴링 시작
-  const startPolling = () => {
-    setIsPolling(true)
+  // 예매 상태 새로고침 (수동)
+  const refreshStatus = () => {
+    fetchReservationStatus()
+    alert('예매 상태를 새로고침했습니다.')
   }
-
-  // 폴링 중지
-  const stopPolling = () => {
-    setIsPolling(false)
-  }
-
-  // 폴링 효과
-  useEffect(() => {
-    let intervalId
-
-    if (isPolling) {
-      // 즉시 한 번 체크
-      checkReservationStatus()
-      
-      // 5초마다 체크 (테스트용으로 짧게 설정, 실제로는 30초 권장)
-      intervalId = setInterval(checkReservationStatus, 5000)
-      console.log('폴링 시작: 5초마다 예매 상태 체크')
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId)
-        console.log('폴링 중지')
-      }
-    }
-  }, [isPolling])
 
   return (
     <div className="home-page">
@@ -270,23 +325,17 @@ function Home({ isLoggedIn }) {
           </div>
           )}
 
-          {/* 예매 상태 모니터링 */}
+          {/* 예매 상태 */}
           {isLoggedIn && (
           <div className="monitoring-mini">
-            <h4>실시간 모니터링</h4>
+            <h4>예매 상태</h4>
             <div className="status-badge">
               <span className={`status-dot ${reservationStatus.is_open ? 'open' : 'closed'}`}></span>
               <span>{reservationStatus.is_open ? '예매 오픈' : '예매 마감'}</span>
             </div>
-            {!isPolling ? (
-              <button className="btn-start-mini" onClick={startPolling}>
-                모니터링 시작
-              </button>
-            ) : (
-              <button className="btn-stop-mini" onClick={stopPolling}>
-                모니터링 중지
-              </button>
-            )}
+            <button className="btn-start-mini" onClick={refreshStatus}>
+              상태 새로고침
+            </button>
           </div>
           )}
         </aside>
@@ -400,6 +449,40 @@ function Home({ isLoggedIn }) {
             예매가 오픈되면 즉시 푸시 알림을 받을 수 있습니다.
           </p>
           
+          {/* iOS 사용자 안내 */}
+          {getDeviceType() === 'ios' && !isIOSStandalone() && (
+            <div className="notification-warning" style={{ marginBottom: '15px', backgroundColor: '#fff3cd', border: '2px solid #ff9800', padding: '15px', borderRadius: '8px' }}>
+              <strong style={{ fontSize: '16px' }}>⚠️ iOS 사용자 필수 안내</strong>
+              <p style={{ marginTop: '10px', fontSize: '14px', fontWeight: '500' }}>
+                iOS에서 알림을 받으려면 <strong style={{ color: '#ff5722' }}>반드시 홈 화면에 추가</strong>해야 합니다!
+              </p>
+              <ol style={{ marginTop: '12px', paddingLeft: '20px', fontSize: '14px', lineHeight: '1.8', backgroundColor: 'white', padding: '12px', borderRadius: '6px' }}>
+                <li>Safari 하단의 <strong>공유 버튼</strong> (□↑) 탭</li>
+                <li><strong>"홈 화면에 추가"</strong> 선택</li>
+                <li><strong>홈 화면의 "통학버스" 앱</strong>으로 실행</li>
+                <li>로그인 후 <strong>알림 받기</strong> 버튼 클릭</li>
+              </ol>
+              <div style={{ marginTop: '12px', padding: '10px', backgroundColor: '#ffebee', borderRadius: '6px', fontSize: '13px' }}>
+                <strong>🚨 iOS 제한사항:</strong>
+                <ul style={{ marginTop: '6px', paddingLeft: '20px', lineHeight: '1.6' }}>
+                  <li>앱이 <strong>실행 중일 때만</strong> 알림 표시</li>
+                  <li>백그라운드 푸시 알림 <strong>미지원</strong></li>
+                  <li>Safari 브라우저에서는 알림 <strong>불가능</strong></li>
+                </ul>
+              </div>
+            </div>
+          )}
+          
+          {/* iOS Standalone 모드 안내 */}
+          {getDeviceType() === 'ios' && isIOSStandalone() && (
+            <div style={{ marginBottom: '15px', backgroundColor: '#e8f5e9', border: '1px solid #4CAF50', padding: '12px', borderRadius: '8px' }}>
+              <strong style={{ color: '#2e7d32' }}>✅ 홈 화면 앱으로 실행 중</strong>
+              <p style={{ marginTop: '8px', fontSize: '13px', color: '#555' }}>
+                알림을 받을 수 있습니다. (앱 실행 중일 때만)
+              </p>
+            </div>
+          )}
+          
           <div className="notification-controls">
             {!isNotificationEnabled ? (
               <button onClick={requestNotificationPermission} className="btn-enable-notification">
@@ -427,39 +510,33 @@ function Home({ isLoggedIn }) {
         </div>
       </div>
 
-      {/* 예매 상태 모니터링 */}
+      {/* 예매 상태 */}
       <div className="monitoring-section">
-        <h2>예매 상태 모니터링</h2>
+        <h2>예매 상태</h2>
         <div className="status-display">
           <div className={`status-indicator ${reservationStatus.is_open ? 'open' : 'closed'}`}>
             <span className="status-dot"></span>
             <span className="status-text">
-              {reservationStatus.is_open ? '예매 오픈' : '예매 닫힘'}
+              {reservationStatus.is_open ? '🔓 예매 오픈' : '🔒 예매 마감'}
             </span>
           </div>
           {reservationStatus.updated_at && (
-            <p className="last-update">
+            <p className="last-updated">
               마지막 업데이트: {new Date(reservationStatus.updated_at).toLocaleString('ko-KR')}
             </p>
           )}
         </div>
 
         <div className="polling-controls">
-          {!isPolling ? (
-            <button onClick={startPolling} className="btn-start-polling">
-              실시간 모니터링 시작
-            </button>
-          ) : (
-            <button onClick={stopPolling} className="btn-stop-polling">
-              모니터링 중지
-            </button>
-          )}
+          <button onClick={refreshStatus} className="btn-start-polling">
+            상태 새로고침
+          </button>
           <p className="polling-info">
-            {isPolling ? '🟢 5초마다 예매 상태를 체크하고 있습니다' : '⚪ 모니터링이 중지되었습니다'}
+            🟢 예매가 오픈되면 서버에서 자동으로 푸시 알림을 보냅니다!
           </p>
-          {isNotificationEnabled && isPolling && (
+          {isNotificationEnabled && (
             <p className="notification-active-info">
-              🔔 알림이 활성화되어 있습니다. 예매 오픈 시 푸시 알림을 받게 됩니다.
+              🔔 알림이 활성화되어 있습니다. 예매 오픈 시 자동으로 푸시 알림을 받게 됩니다.
             </p>
           )}
         </div>
@@ -495,12 +572,22 @@ function Home({ isLoggedIn }) {
         <h3>💡 사용 방법</h3>
         <ul>
           <li><strong>1단계:</strong> "알림 받기" 버튼을 클릭하여 푸시 알림을 허용하세요</li>
-          <li><strong>2단계:</strong> "실시간 모니터링 시작" 버튼을 클릭하세요</li>
-          <li><strong>3단계:</strong> 관리자가 예매를 오픈하면 자동으로 푸시 알림을 받게 됩니다</li>
-          <li>💡 브라우저를 최소화하거나 다른 탭을 보고 있어도 알림을 받을 수 있습니다</li>
+          <li><strong>2단계:</strong> 관리자가 예매를 오픈하면 서버에서 자동으로 푸시 알림을 보냅니다!</li>
+          <li>💡 <strong>앱이 꺼져있어도</strong> 알림을 받을 수 있습니다</li>
+          <li>� PC/Android: 브라우저를 닫아도 백그라운드 알림 수신</li>
+          <li>📱 iOS: 홈 화면에 추가 후 앱 실행 중일 때만 알림 수신</li>
         </ul>
       </div>
     </div>
+  )
+}
+
+// 에러 바운더리로 감싼 Home 컴포넌트 export
+function Home(props) {
+  return (
+    <ErrorBoundary>
+      <HomeContent {...props} />
+    </ErrorBoundary>
   )
 }
 
