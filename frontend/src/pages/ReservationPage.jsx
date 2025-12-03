@@ -37,18 +37,6 @@ const ReservationPage = () => {
     setIsRouteOpen(false);
   };
 
-  // 아이콘 클릭 시 실행
-  const handleCalendarClick = () => {
-    if (dateInputRef.current) {
-      try {
-        dateInputRef.current.showPicker(); // 브라우저 달력 강제 열기
-      } catch (e) {
-        // showPicker를 지원하지 않는 옛날 브라우저용 예외처리
-        dateInputRef.current.focus(); 
-      }
-    }
-  };
-
   // 더미 데이터
   const scheduleData = [
     { id: 1, time: '11월 27일 07:50', type: '환승', price: '8,000원', seats: 45, status: 'available' },
