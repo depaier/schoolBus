@@ -12,6 +12,35 @@ from backend.services.web_push_service import web_push_service
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+@router.get("/push/debug/{student_id}")
+async def debug_push_subscription(student_id: str):
+    """특정 학생의 푸시 구독 정보 확인 (디버그용)"""
+    try:
+        response = supabase.table("users").select("student_id, push_subscription, notification_enabled").eq("student_id", student_id).execute()
+        
+        if response.data and len(response.data) > 0:
+            user = response.data[0]
+            subscription = user.get("push_subscription")
+            
+            debug_info = {
+                "student_id": student_id,
+                "notification_enabled": user.get("notification_enabled"),
+                "has_subscription": subscription is not None,
+            }
+            
+            if subscription:
+                import json
+                sub_data = json.loads(subscription) if isinstance(subscription, str) else subscription
+                debug_info["endpoint"] = sub_data.get("endpoint", "")[:100] + "..."
+                debug_info["endpoint_type"] = "Apple" if "apple.com" in sub_data.get("endpoint", "") else "Other"
+                
+            return debug_info
+        else:
+            return {"error": "사용자를 찾을 수 없습니다"}
+    except Exception as e:
+        logger.error(f"디버그 정보 조회 실패: {e}")
+        return {"error": str(e)}
+
 
 class PushSubscription(BaseModel):
     """푸시 구독 정보"""
