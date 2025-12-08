@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'vite.svg'],
       manifest: {
-        name: '한성대 통학버스',
+        name: '한서대 통학버스',
         short_name: '통학버스',
-        description: '한성대학교 통학버스 예약 시스템',
+        description: '한서대학교 통학버스 예약 시스템',
         theme_color: '#4CAF50',
         background_color: '#ffffff',
         display: 'standalone',
@@ -54,20 +54,7 @@ export default defineConfig({
     })
   ],
   server: {
-    host: true, // 네트워크에서 접근 가능하도록 설정
-    https: false, // HTTPS는 ngrok을 통해 제공
-    allowedHosts: [
-      '.ngrok-free.app',
-      '.ngrok.io',
-      'localhost',
-      '127.0.0.1'
-    ],
-    allowHmrAccessFrom: [
-      'http://localhost:8000',
-      'http://127.0.0.1:8000',
-      'http://127.0.0.1:5173',
-      'http://localhost:5173',
-      'http://localhost:4040',
-    ],
+    host: true,
+    port: 5173,
   },
 })
