@@ -36,6 +36,10 @@ class WebPushService:
         private_key_pem = os.getenv("VAPID_PRIVATE_KEY_PEM")
         if private_key_pem:
             try:
+                # Vercel 환경 변수에서 \n이 문자열로 들어올 경우 실제 줄바꿈으로 변환
+                if '\\n' in private_key_pem:
+                    private_key_pem = private_key_pem.replace('\\n', '\n')
+                
                 self._vapid_private_key = serialization.load_pem_private_key(
                     private_key_pem.encode('utf-8'),
                     password=None,
