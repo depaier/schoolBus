@@ -96,11 +96,19 @@ function AdminPage() {
       const routesResponse = await axios.get(`${API_BASE_URL}/api/routes`);
       const hasOpenRoute = routesResponse.data.routes.some(route => route.is_open);
       
-      await axios.post(`${API_BASE_URL}/api/reservation/update`, {
+      const updateResponse = await axios.post(`${API_BASE_URL}/api/reservation/update`, {
         is_open: hasOpenRoute
       });
 
       console.log(`전체 예매 상태 업데이트: ${hasOpenRoute ? '오픈' : '마감'}`);
+      
+      // 푸시 알림 결과 확인
+      if (updateResponse.data.push_notification) {
+        console.log('📱 푸시 알림 전송 결과:', updateResponse.data.push_notification);
+        if (updateResponse.data.push_notification.success_count > 0) {
+          alert(`✅ ${updateResponse.data.push_notification.success_count}명에게 푸시 알림이 전송되었습니다!`);
+        }
+      }
 
     } catch (err) {
       console.error("예매 상태 변경 실패:", err);

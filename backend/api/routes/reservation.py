@@ -61,26 +61,34 @@ async def update_reservation_status(body: ReservationUpdate):
             }).eq("id", status_id).execute()
             
             # 🔥 닫혀있었는데 열린 경우 푸시 알림 전송
+            push_result = None
             if not previous_status and body.is_open:
                 logger.info("예매 오픈 감지 - 푸시 알림 전송 시작")
                 try:
-                    result = await web_push_service.send_to_all_users(
+                    push_result = await web_push_service.send_to_all_users(
                         supabase,
                         "🎉 통학버스 예매 오픈!",
                         "통학버스 예매가 오픈되었습니다. 지금 바로 예매하세요!"
                     )
-                    logger.info(f"푸시 알림 전송 결과: {result}")
+                    logger.info(f"푸시 알림 전송 결과: {push_result}")
                 except Exception as e:
                     logger.error(f"푸시 알림 전송 실패: {e}")
+                    push_result = {"error": str(e)}
                     # 알림 실패해도 상태 업데이트는 성공으로 처리
             
-            return {
+            response_data = {
                 "message": "예매 상태가 변경되었습니다.",
                 "state": {
                     "is_open": body.is_open,
                     "updated_at": updated.data[0]["updated_at"]
                 }
             }
+            
+            # 푸시 알림이 전송되었으면 결과 포함
+            if push_result is not None:
+                response_data["push_notification"] = push_result
+            
+            return response_data
         else:
             # 레코드가 없으면 생성
             new_status = supabase.table("reservation_status").insert({
