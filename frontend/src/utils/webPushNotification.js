@@ -1,7 +1,7 @@
 // Web Push Notification 유틸리티 (VAPID 기반)
 import axios from './axiosConfig';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8000';
 
 /**
  * 디바이스 타입 감지

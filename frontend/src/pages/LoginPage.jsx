@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from '../utils/axiosConfig'
 import './LoginPage.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8000'
 
 function LoginPage() {
   const navigate = useNavigate()

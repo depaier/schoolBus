@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './AdminPage.css'
 import axios from "../utils/axiosConfig";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8000'
 
 function AdminPage() {
   const [reservations, setReservations] = useState([])
