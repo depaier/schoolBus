@@ -18,7 +18,8 @@ app.add_middleware(
 )
 
 # API 라우터 등록
-app.include_router(api_router, prefix="/api")
+# Vercel에서는 이미 /api로 라우팅되므로 prefix 제거
+app.include_router(api_router)
 
 
 @app.get("/")
