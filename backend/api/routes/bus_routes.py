@@ -7,8 +7,7 @@ import sys
 import os
 
 # Supabase 클라이언트 import
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config.supabase_client import get_supabase_client
+from backend.config.supabase_client import get_supabase_client
 
 router = APIRouter()
 supabase = get_supabase_client()
