@@ -33,10 +33,24 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - 캐싱 비활성화 (개발 중)
+// Fetch event - SPA 라우팅 지원
 self.addEventListener('fetch', (event) => {
-  // 모든 요청을 네트워크에서 직접 가져옴
-  event.respondWith(fetch(event.request));
+  const { request } = event;
+  const url = new URL(request.url);
+  
+  // 같은 origin의 네비게이션 요청 (HTML 페이지)
+  if (request.mode === 'navigate' && url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(request).catch(() => {
+        // 네트워크 실패 시 index.html로 fallback (SPA 라우팅)
+        return caches.match('/index.html');
+      })
+    );
+    return;
+  }
+  
+  // 나머지 요청은 네트워크에서 직접 가져옴
+  event.respondWith(fetch(request));
 });
 
 // Push notification event
