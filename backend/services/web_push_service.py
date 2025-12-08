@@ -16,18 +16,27 @@ logger = logging.getLogger(__name__)
 
 class WebPushService:
     def __init__(self):
-        """Web Push 서비스 초기화"""
-        self.vapid_private_key = None  # 키 객체 저장
-        self.vapid_public_key = os.getenv("VAPID_PUBLIC_KEY")
+        """Web Push 서비스 초기화 (Lazy loading)"""
+        self._vapid_private_key = None
+        self._initialized = False
+        self.vapid_public_key = None
         self.vapid_claims = {
-            "sub": "mailto:admin@schoolbus.com"  # 관리자 이메일
+            "sub": "mailto:admin@schoolbus.com"
         }
+    
+    def _ensure_initialized(self):
+        """VAPID 키를 실제 사용 시점에 로드 (Lazy initialization)"""
+        if self._initialized:
+            return
+        
+        self._initialized = True
+        self.vapid_public_key = os.getenv("VAPID_PUBLIC_KEY")
         
         # 비공개키 로드
         private_key_pem = os.getenv("VAPID_PRIVATE_KEY_PEM")
         if private_key_pem:
             try:
-                self.vapid_private_key = serialization.load_pem_private_key(
+                self._vapid_private_key = serialization.load_pem_private_key(
                     private_key_pem.encode('utf-8'),
                     password=None,
                     backend=default_backend()
@@ -35,8 +44,15 @@ class WebPushService:
                 logger.info("VAPID 키 로드 완료")
             except Exception as e:
                 logger.error(f"VAPID 키 로드 실패: {e}")
+                self._vapid_private_key = None
         else:
             logger.warning("VAPID_PRIVATE_KEY_PEM 환경 변수가 설정되지 않았습니다")
+    
+    @property
+    def vapid_private_key(self):
+        """VAPID 개인 키 접근 시 자동 초기화"""
+        self._ensure_initialized()
+        return self._vapid_private_key
     
     async def send_notification(
         self,
