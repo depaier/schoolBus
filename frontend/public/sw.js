@@ -3,6 +3,9 @@ const CACHE_NAME = 'schoolbus-v5';
 const SW_VERSION = '5.0.0';
 console.log(`🔄 Service Worker version ${SW_VERSION} loaded - ${new Date().toISOString()}`);
 
+// Workbox precache manifest injection point
+self.__WB_MANIFEST;
+
 // Install event
 self.addEventListener('install', (event) => {
   console.log(`Service Worker ${SW_VERSION}: Installing...`);
