@@ -37,24 +37,33 @@ self.addEventListener('fetch', (event) => {
 // Push notification event
 self.addEventListener('push', (event) => {
   console.log('🔔 Service Worker: Push notification received', event);
-  console.log('📦 Push event data:', event.data ? event.data.text() : 'No data');
+  console.log('📦 Push event:', {
+    hasData: !!event.data,
+    type: event.data ? typeof event.data : 'undefined'
+  });
   
   let notificationData = {
     title: '통학버스 알림',
     body: '새로운 알림이 있습니다',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/vite.svg',
+    badge: '/vite.svg',
     vibrate: [200, 100, 200],
-    tag: 'bus-notification',
+    tag: 'bus-notification-' + Date.now(),
     requireInteraction: true,
-    data: {}
+    data: { timestamp: Date.now() }
   };
 
   // 푸시 데이터 파싱
   if (event.data) {
     try {
+      // 먼저 텍스트로 확인
+      const textData = event.data.text();
+      console.log('📝 Raw text data:', textData);
+      
+      // JSON 파싱 시도
       const payload = event.data.json();
-      console.log('✅ Parsed payload:', payload);
+      console.log('✅ Parsed JSON payload:', payload);
+      
       notificationData = {
         title: payload.title || notificationData.title,
         body: payload.body || notificationData.body,
@@ -63,12 +72,19 @@ self.addEventListener('push', (event) => {
         vibrate: payload.vibrate || notificationData.vibrate,
         tag: payload.tag || notificationData.tag,
         requireInteraction: payload.requireInteraction !== undefined ? payload.requireInteraction : true,
-        data: payload.data || {}
+        data: payload.data || notificationData.data
       };
     } catch (e) {
       console.error('❌ Push data parsing failed:', e);
-      notificationData.body = event.data.text();
+      // 파싱 실패해도 기본 알림은 표시
+      try {
+        notificationData.body = event.data.text() || notificationData.body;
+      } catch (textError) {
+        console.error('❌ Failed to get text:', textError);
+      }
     }
+  } else {
+    console.warn('⚠️ No data in push event - showing default notification');
   }
 
   console.log('📢 Showing notification:', notificationData);
@@ -83,8 +99,14 @@ self.addEventListener('push', (event) => {
     data: notificationData.data
   }).then(() => {
     console.log('✅ Notification shown successfully');
+    return true;
   }).catch((error) => {
     console.error('❌ Failed to show notification:', error);
+    // 에러가 나도 기본 알림 시도
+    return self.registration.showNotification('통학버스', {
+      body: '새 알림',
+      tag: 'fallback-' + Date.now()
+    });
   });
 
   event.waitUntil(showNotificationPromise);
