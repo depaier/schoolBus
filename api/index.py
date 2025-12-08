@@ -11,7 +11,8 @@ sys.path.insert(0, str(root_path))
 
 # FastAPI 앱 임포트
 from backend.main import app
+from mangum import Mangum
 
 # Vercel Serverless Function Handler
-# Vercel은 ASGI 앱을 자동으로 처리
-handler = app
+# Mangum을 사용하여 FastAPI를 AWS Lambda/Vercel 호환 핸들러로 변환
+handler = Mangum(app, lifespan="off")
