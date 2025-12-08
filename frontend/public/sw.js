@@ -1,7 +1,7 @@
 // Service Worker for PWA
-const CACHE_NAME = 'schoolbus-v3';
-const SW_VERSION = '3.0.0';
-console.log(`Service Worker version ${SW_VERSION} loaded`);
+const CACHE_NAME = 'schoolbus-v4';
+const SW_VERSION = '4.0.0';
+console.log(`🔄 Service Worker version ${SW_VERSION} loaded - ${new Date().toISOString()}`);
 
 // Install event - 캐싱 비활성화 (개발 중)
 self.addEventListener('install', (event) => {
