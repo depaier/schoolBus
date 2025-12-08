@@ -1,5 +1,7 @@
 // Service Worker for PWA
-const CACHE_NAME = 'schoolbus-v2';
+const CACHE_NAME = 'schoolbus-v3';
+const SW_VERSION = '3.0.0';
+console.log(`Service Worker version ${SW_VERSION} loaded`);
 
 // Install event - 캐싱 비활성화 (개발 중)
 self.addEventListener('install', (event) => {
@@ -34,13 +36,14 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification event
 self.addEventListener('push', (event) => {
-  console.log('Service Worker: Push notification received', event);
+  console.log('🔔 Service Worker: Push notification received', event);
+  console.log('📦 Push event data:', event.data ? event.data.text() : 'No data');
   
   let notificationData = {
     title: '통학버스 알림',
     body: '새로운 알림이 있습니다',
-    icon: '/vite.svg',
-    badge: '/vite.svg',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     tag: 'bus-notification',
     requireInteraction: true,
@@ -51,6 +54,7 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const payload = event.data.json();
+      console.log('✅ Parsed payload:', payload);
       notificationData = {
         title: payload.title || notificationData.title,
         body: payload.body || notificationData.body,
@@ -62,22 +66,28 @@ self.addEventListener('push', (event) => {
         data: payload.data || {}
       };
     } catch (e) {
-      console.error('Push data parsing failed:', e);
+      console.error('❌ Push data parsing failed:', e);
       notificationData.body = event.data.text();
     }
   }
 
-  event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: notificationData.icon,
-      badge: notificationData.badge,
-      vibrate: notificationData.vibrate,
-      tag: notificationData.tag,
-      requireInteraction: notificationData.requireInteraction,
-      data: notificationData.data
-    })
-  );
+  console.log('📢 Showing notification:', notificationData);
+
+  const showNotificationPromise = self.registration.showNotification(notificationData.title, {
+    body: notificationData.body,
+    icon: notificationData.icon,
+    badge: notificationData.badge,
+    vibrate: notificationData.vibrate,
+    tag: notificationData.tag,
+    requireInteraction: notificationData.requireInteraction,
+    data: notificationData.data
+  }).then(() => {
+    console.log('✅ Notification shown successfully');
+  }).catch((error) => {
+    console.error('❌ Failed to show notification:', error);
+  });
+
+  event.waitUntil(showNotificationPromise);
 });
 
 // Notification click event
