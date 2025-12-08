@@ -1,31 +1,33 @@
 // Service Worker for PWA
-const CACHE_NAME = 'schoolbus-v4';
-const SW_VERSION = '4.0.0';
+const CACHE_NAME = 'schoolbus-v5';
+const SW_VERSION = '5.0.0';
 console.log(`🔄 Service Worker version ${SW_VERSION} loaded - ${new Date().toISOString()}`);
 
-// Install event - 캐싱 비활성화 (개발 중)
+// Install event
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...');
+  console.log(`Service Worker ${SW_VERSION}: Installing...`);
   // 즉시 활성화
   self.skipWaiting();
 });
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...');
+  console.log(`Service Worker ${SW_VERSION}: Activating...`);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log('Service Worker: Clearing old cache');
+            console.log('Service Worker: Clearing old cache:', cache);
             return caches.delete(cache);
           }
         })
       );
+    }).then(() => {
+      console.log(`Service Worker ${SW_VERSION}: Activated and claiming clients`);
+      return self.clients.claim();
     })
   );
-  return self.clients.claim();
 });
 
 // Fetch event - 캐싱 비활성화 (개발 중)
