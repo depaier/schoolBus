@@ -574,9 +574,27 @@ function HomeContent({ isLoggedIn }) {
           <li><strong>1단계:</strong> "알림 받기" 버튼을 클릭하여 푸시 알림을 허용하세요</li>
           <li><strong>2단계:</strong> 관리자가 예매를 오픈하면 서버에서 자동으로 푸시 알림을 보냅니다!</li>
           <li>💡 <strong>앱이 꺼져있어도</strong> 알림을 받을 수 있습니다</li>
-          <li>� PC/Android: 브라우저를 닫아도 백그라운드 알림 수신</li>
+          <li>💻 PC/Android: 브라우저를 닫아도 백그라운드 알림 수신</li>
           <li>📱 iOS: 홈 화면에 추가 후 앱 실행 중일 때만 알림 수신</li>
         </ul>
+        
+        {/* 디버그 버튼 */}
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <button 
+            onClick={() => window.location.href = '/push-test.html'}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🔧 푸시 알림 상태 확인
+          </button>
+        </div>
       </div>
     </div>
   )
