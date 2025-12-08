@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 import logging
-from config.supabase_client import supabase
-from services.web_push_service import web_push_service
+from backend.config.supabase_client import supabase
+from backend.services.web_push_service import web_push_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
