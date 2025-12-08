@@ -1,6 +1,8 @@
-# SchoolBus
+# SchoolBus - 한서대학교 통학버스 예약 시스템
 
 React + FastAPI 풀스택 프로젝트
+
+🚀 **배포 URL**: https://school-bus-psi.vercel.app/
 
 ## 프로젝트 구조
 

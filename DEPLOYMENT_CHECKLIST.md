@@ -76,12 +76,14 @@ PYTHONPATH=/var/task
 3. 배포 완료 대기 (약 2-3분)
 
 ### 4단계: 배포 후 설정
-1. 배포 URL 확인: `https://your-project.vercel.app`
+1. 배포 URL 확인: `https://school-bus-psi.vercel.app`
 2. ALLOWED_ORIGINS 환경 변수 업데이트:
    ```
-   ALLOWED_ORIGINS=https://your-project.vercel.app
+   ALLOWED_ORIGINS=https://school-bus-psi.vercel.app
    ```
 3. Redeploy (Settings → Deployments → Redeploy)
+
+✅ **완료**: 배포 URL이 https://school-bus-psi.vercel.app 로 확정되었습니다!
 
 ---
 

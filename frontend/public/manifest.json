@@ -1,7 +1,7 @@
 {
-  "name": "한성대 통학버스",
+  "name": "한서대 통학버스",
   "short_name": "통학버스",
-  "description": "한성대학교 통학버스 예약 시스템",
+  "description": "한서대학교 통학버스 예약 시스템",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
