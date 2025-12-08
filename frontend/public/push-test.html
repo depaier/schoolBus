@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>푸시 알림 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-item {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #4CAF50;
+            background: #f9f9f9;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button:active {
+            background: #45a049;
+        }
+        #log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 푸시 알림 테스트</h1>
+    
+    <div class="status">
+        <h3>시스템 상태</h3>
+        <div id="status-container"></div>
+    </div>
+
+    <button onclick="checkStatus()">상태 확인</button>
+    <button onclick="requestPermission()">알림 권한 요청</button>
+    <button onclick="testNotification()">로컬 알림 테스트</button>
+    
+    <h3>로그</h3>
+    <div id="log"></div>
+
+    <script>
+        const log = (message) => {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        };
+
+        const updateStatus = (items) => {
+            const container = document.getElementById('status-container');
+            container.innerHTML = items.map(item => 
+                `<div class="status-item ${item.error ? 'error' : ''}">
+                    <strong>${item.label}:</strong> ${item.value}
+                </div>`
+            ).join('');
+        };
+
+        async function checkStatus() {
+            log('=== 상태 확인 시작 ===');
+            
+            const items = [];
+            
+            // 1. HTTPS 확인
+            const isHttps = window.location.protocol === 'https:';
+            items.push({
+                label: 'HTTPS',
+                value: isHttps ? '✅ 사용 중' : '❌ 필요함',
+                error: !isHttps
+            });
+            log(`HTTPS: ${isHttps}`);
+
+            // 2. Service Worker 지원
+            const swSupported = 'serviceWorker' in navigator;
+            items.push({
+                label: 'Service Worker 지원',
+                value: swSupported ? '✅ 지원됨' : '❌ 미지원',
+                error: !swSupported
+            });
+            log(`Service Worker 지원: ${swSupported}`);
+
+            // 3. Push API 지원
+            const pushSupported = 'PushManager' in window;
+            items.push({
+                label: 'Push API 지원',
+                value: pushSupported ? '✅ 지원됨' : '❌ 미지원',
+                error: !pushSupported
+            });
+            log(`Push API 지원: ${pushSupported}`);
+
+            // 4. 알림 권한
+            const permission = Notification.permission;
+            items.push({
+                label: '알림 권한',
+                value: permission === 'granted' ? '✅ 허용됨' : 
+                       permission === 'denied' ? '❌ 거부됨' : '⚠️ 미설정',
+                error: permission === 'denied'
+            });
+            log(`알림 권한: ${permission}`);
+
+            // 5. Service Worker 등록 상태
+            if (swSupported) {
+                const registration = await navigator.serviceWorker.getRegistration();
+                const swActive = !!registration?.active;
+                items.push({
+                    label: 'Service Worker 활성',
+                    value: swActive ? '✅ 활성화됨' : '❌ 비활성',
+                    error: !swActive
+                });
+                log(`Service Worker 활성: ${swActive}`);
+
+                // 6. Push 구독 상태
+                if (registration && pushSupported) {
+                    const subscription = await registration.pushManager.getSubscription();
+                    items.push({
+                        label: 'Push 구독',
+                        value: subscription ? '✅ 구독됨' : '❌ 미구독',
+                        error: !subscription
+                    });
+                    log(`Push 구독: ${!!subscription}`);
+                    if (subscription) {
+                        log(`Endpoint: ${subscription.endpoint.substring(0, 50)}...`);
+                    }
+                }
+            }
+
+            // 7. Standalone 모드 (iOS PWA)
+            const isStandalone = window.navigator.standalone || 
+                                window.matchMedia('(display-mode: standalone)').matches;
+            items.push({
+                label: 'Standalone 모드 (PWA)',
+                value: isStandalone ? '✅ PWA로 실행 중' : '⚠️ 브라우저에서 실행 중',
+                error: false
+            });
+            log(`Standalone 모드: ${isStandalone}`);
+
+            // 8. User Agent
+            items.push({
+                label: 'User Agent',
+                value: navigator.userAgent.includes('iPhone') ? '📱 iPhone' :
+                       navigator.userAgent.includes('iPad') ? '📱 iPad' :
+                       navigator.userAgent.includes('Android') ? '📱 Android' :
+                       '💻 Desktop',
+                error: false
+            });
+            log(`User Agent: ${navigator.userAgent}`);
+
+            updateStatus(items);
+            log('=== 상태 확인 완료 ===\n');
+        }
+
+        async function requestPermission() {
+            log('알림 권한 요청 중...');
+            try {
+                const permission = await Notification.requestPermission();
+                log(`권한 결과: ${permission}`);
+                await checkStatus();
+            } catch (error) {
+                log(`❌ 권한 요청 실패: ${error.message}`);
+            }
+        }
+
+        async function testNotification() {
+            log('로컬 알림 테스트 중...');
+            
+            if (Notification.permission !== 'granted') {
+                log('❌ 알림 권한이 필요합니다');
+                return;
+            }
+
+            try {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (!registration) {
+                    log('❌ Service Worker가 등록되지 않았습니다');
+                    return;
+                }
+
+                await registration.showNotification('테스트 알림', {
+                    body: '이 알림이 보이면 Service Worker가 정상 작동합니다!',
+                    icon: '/vite.svg',
+                    badge: '/vite.svg',
+                    tag: 'test',
+                    requireInteraction: false
+                });
+                
+                log('✅ 로컬 알림 전송 성공');
+            } catch (error) {
+                log(`❌ 알림 전송 실패: ${error.message}`);
+            }
+        }
+
+        // 페이지 로드 시 자동 상태 확인
+        window.addEventListener('load', () => {
+            log('페이지 로드 완료');
+            checkStatus();
+        });
+
+        // Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => log(`✅ Service Worker 등록 성공: ${reg.scope}`))
+                .catch(err => log(`❌ Service Worker 등록 실패: ${err.message}`));
+        }
+    </script>
+</body>
+</html>
