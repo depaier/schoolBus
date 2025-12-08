@@ -1,13 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api import router as api_router
+import os
 
 app = FastAPI(title="SchoolBus API", version="1.0.0")
 
-# CORS 설정
+# CORS 설정 (환경에 따라 동적 설정)
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "*")
+allowed_origins = allowed_origins_str.split(",") if allowed_origins_str != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 모든 origin 허용 (개발/테스트용)
+    allow_origins=allowed_origins,  # 환경 변수로 제어
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
