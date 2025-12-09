@@ -190,14 +190,16 @@ function HomeContent({ isLoggedIn }) {
     // 🔥 URL 파라미터 확인 (알림에서 온 경우)
     const urlParams = new URLSearchParams(window.location.search)
     const routeId = urlParams.get('route')
-    if (routeId && isLoggedIn) {
+    if (routeId) {
       console.log('🔔 알림에서 노선으로 이동:', routeId)
       // URL 파라미터 제거
       window.history.replaceState({}, '', '/')
-      // 노선 찾아서 이동
-      setTimeout(() => {
-        handleNotificationClick({ route_id: routeId })
-      }, 1000) // 노선 로드 대기
+      // 로그인 상태 확인 후 노선 찾아서 이동 (충분한 시간 대기)
+      if (isLoggedIn) {
+        setTimeout(() => {
+          handleNotificationClick({ route_id: routeId })
+        }, 1500) // 노선 로드 대기
+      }
     }
 
     // Service Worker 메시지 리스너
@@ -205,7 +207,10 @@ function HomeContent({ isLoggedIn }) {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data.type === 'NOTIFICATION_CLICK') {
           console.log('📬 Service Worker 메시지:', event.data)
-          handleNotificationClick(event.data.data)
+          // 약간의 지연 후 처리 (페이지 로드 완료 대기)
+          setTimeout(() => {
+            handleNotificationClick(event.data.data)
+          }, 500)
         }
       })
     }
@@ -345,9 +350,21 @@ function HomeContent({ isLoggedIn }) {
 
   // 알림 클릭 핸들러
   const handleNotificationClick = async (data) => {
-    if (!data || !data.route_id) return
+    if (!data || !data.route_id) {
+      console.error('❌ 알림 데이터가 없습니다')
+      return
+    }
 
     console.log('🔔 알림 클릭 처리:', data)
+    console.log('📊 현재 allRoutes 개수:', allRoutes.length)
+
+    // 노선 목록이 비어있으면 먼저 로드
+    if (allRoutes.length === 0) {
+      console.log('⚠️ 노선 목록이 비어있음, 로드 시작')
+      await fetchAllRoutes()
+      // 상태 업데이트 대기
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
 
     // 해당 노선 찾기
     let route = allRoutes.find(r => r.routeId === data.route_id)
@@ -357,9 +374,29 @@ function HomeContent({ isLoggedIn }) {
       // 노선을 찾을 수 없으면 전체 노선 다시 로드
       await fetchAllRoutes()
       
-      // 약간의 지연 후 다시 찾기 (상태 업데이트 대기)
-      await new Promise(resolve => setTimeout(resolve, 100))
-      route = allRoutes.find(r => r.routeId === data.route_id)
+      // 상태 업데이트 대기
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // API에서 직접 노선 조회 시도
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/routes`)
+        const routes = response.data.routes.map(r => ({
+          id: r.id,
+          routeName: r.route_name,
+          routeId: r.route_id,
+          busType: r.bus_type || '등교',
+          departureDate: r.departure_date || new Date().toISOString().split('T')[0],
+          departureTime: r.departure_time,
+          availableSeats: r.available_seats,
+          totalSeats: r.total_seats,
+          isOpen: r.is_open
+        }))
+        
+        route = routes.find(r => r.routeId === data.route_id)
+        console.log('🔍 API에서 직접 조회한 노선:', route)
+      } catch (err) {
+        console.error('❌ API 조회 실패:', err)
+      }
     }
     
     if (route) {
@@ -377,10 +414,10 @@ function HomeContent({ isLoggedIn }) {
         setSelectedRoute(route)
         setSeatCount(1)
         setReservationStep('selectSeats')
-      }, 50)
+      }, 100)
     } else {
       console.error('❌ 노선을 찾을 수 없습니다:', data.route_id)
-      alert('해당 노선을 찾을 수 없습니다.')
+      alert('해당 노선을 찾을 수 없습니다. 페이지를 새로고침해주세요.')
     }
   }
 
