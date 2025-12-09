@@ -14,6 +14,7 @@ function AdminPage() {
   const [newRoute, setNewRoute] = useState({
     routeName: '',
     busType: '등교',
+    departureDate: new Date().toISOString().split('T')[0],
     departureTime: '',
     totalSeats: 30
   })
@@ -54,6 +55,7 @@ function AdminPage() {
         routeName: route.route_name,
         routeId: route.route_id,
         busType: route.bus_type || '등교',
+        departureDate: route.departure_date || new Date().toISOString().split('T')[0],
         departureTime: route.departure_time,
         availableSeats: route.available_seats,
         totalSeats: route.total_seats,
@@ -152,6 +154,7 @@ function AdminPage() {
         route_name: newRoute.routeName,
         route_id: routeId,
         bus_type: newRoute.busType,
+        departure_date: newRoute.departureDate,
         departure_time: newRoute.departureTime,
         total_seats: newRoute.totalSeats
       });
@@ -160,7 +163,7 @@ function AdminPage() {
       await fetchRoutes();
       
       // 입력 필드 초기화
-      setNewRoute({ routeName: '', busType: '등교', departureTime: '', totalSeats: 30 });
+      setNewRoute({ routeName: '', busType: '등교', departureDate: new Date().toISOString().split('T')[0], departureTime: '', totalSeats: 30 });
       
       alert('노선이 추가되었습니다.');
     } catch (err) {
@@ -259,6 +262,12 @@ function AdminPage() {
             <option value="하교">하교</option>
           </select>
           <input
+            type="date"
+            placeholder="출발날짜"
+            value={newRoute.departureDate}
+            onChange={(e) => setNewRoute({ ...newRoute, departureDate: e.target.value })}
+          />
+          <input
             type="time"
             placeholder="출발시간"
             value={newRoute.departureTime}
@@ -298,6 +307,7 @@ function AdminPage() {
               <div className="reservation-info">
                 <p><strong>노선 ID:</strong> {reservation.routeId}</p>
                 <p><strong>구분:</strong> {reservation.busType}</p>
+                <p><strong>출발 날짜:</strong> {reservation.departureDate}</p>
                 <p><strong>출발 시간:</strong> {reservation.departureTime}</p>
                 <p><strong>남은 좌석:</strong> {reservation.availableSeats} / {reservation.totalSeats}</p>
               </div>

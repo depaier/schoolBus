@@ -686,3 +686,120 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 예약 단계 스타일 */
+.reservation-step {
+  padding: 30px;
+  background: white;
+  border-radius: 8px;
+}
+
+.step-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row.total {
+  border-top: 2px solid #333;
+  border-bottom: none;
+  padding-top: 20px;
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.info-label {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.seat-selection {
+  margin: 25px 0;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.seat-label {
+  display: block;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.seat-select {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.step-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.btn-cancel,
+.btn-next,
+.btn-confirm {
+  flex: 1;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+.btn-next,
+.btn-confirm {
+  background: #333;
+  color: white;
+}
+
+.btn-next:hover,
+.btn-confirm:hover {
+  background: #555;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

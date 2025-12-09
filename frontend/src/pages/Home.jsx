@@ -55,6 +55,11 @@ function HomeContent({ isLoggedIn }) {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [activeTab, setActiveTab] = useState('이용안내')
   const [hasSearched, setHasSearched] = useState(false) // 조회 여부
+  
+  // 예약 프로세스 상태
+  const [reservationStep, setReservationStep] = useState('list') // 'list', 'selectSeats', 'confirm'
+  const [selectedRoute, setSelectedRoute] = useState(null)
+  const [seatCount, setSeatCount] = useState(1)
 
   const [reservationStatus, setReservationStatus] = useState({
     is_open: false,
@@ -231,6 +236,7 @@ function HomeContent({ isLoggedIn }) {
         routeName: route.route_name,
         routeId: route.route_id,
         busType: route.bus_type || '등교',
+        departureDate: route.departure_date || new Date().toISOString().split('T')[0],
         departureTime: route.departure_time,
         availableSeats: route.available_seats,
         totalSeats: route.total_seats,
@@ -268,6 +274,67 @@ function HomeContent({ isLoggedIn }) {
   const refreshStatus = () => {
     fetchReservationStatus()
     alert('예매 상태를 새로고침했습니다.')
+  }
+
+  // 예약 버튼 클릭 - 인원 선택 단계로 이동
+  const handleReservationClick = (route) => {
+    setSelectedRoute(route)
+    setSeatCount(1)
+    setReservationStep('selectSeats')
+  }
+
+  // 인원 선택 완료 - 확인 단계로 이동
+  const handleSeatSelection = () => {
+    if (seatCount < 1) {
+      alert('최소 1명 이상 선택해주세요.')
+      return
+    }
+    if (seatCount > selectedRoute.availableSeats) {
+      alert(`잔여 좌석(${selectedRoute.availableSeats}석)보다 많이 선택할 수 없습니다.`)
+      return
+    }
+    setReservationStep('confirm')
+  }
+
+  // 예약 확정
+  const handleConfirmReservation = async () => {
+    try {
+      const userStr = localStorage.getItem('user')
+      if (!userStr) {
+        alert('로그인이 필요합니다.')
+        navigate('/login')
+        return
+      }
+
+      const user = JSON.parse(userStr)
+      
+      const response = await axios.post(`${API_BASE_URL}/api/bookings`, {
+        student_id: user.student_id,
+        route_id: selectedRoute.routeId,
+        seat_count: seatCount,
+        departure_date: selectedRoute.departureDate
+      })
+
+      alert(`예약이 완료되었습니다! (${seatCount}명)`)
+      
+      // 상태 초기화 및 노선 목록으로 돌아가기
+      setReservationStep('list')
+      setSelectedRoute(null)
+      setSeatCount(1)
+      
+      // 노선 목록 새로고침
+      handleSearch()
+    } catch (err) {
+      console.error('❌ 예약 실패:', err)
+      alert(err.response?.data?.detail || '예약에 실패했습니다.')
+    }
+  }
+
+  // 예약 취소 - 목록으로 돌아가기
+  const handleCancelReservation = () => {
+    setReservationStep('list')
+    setSelectedRoute(null)
+    setSeatCount(1)
   }
 
   return (
@@ -333,11 +400,12 @@ function HomeContent({ isLoggedIn }) {
 
               <div className="form-group">
                 <label>조회시작</label>
-                <input 
-                  type="date"
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date) => setSelectedDate(date)}
+                  dateFormat="yyyy-MM-dd"
                   className="form-input"
-                  value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
-                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                  minDate={new Date()}
                 />
               </div>
 
@@ -430,63 +498,147 @@ function HomeContent({ isLoggedIn }) {
           <div className="right-panel">
             <h2 className="panel-title">배차조회 / 선택</h2>
             
-            {!hasSearched ? (
-              <div className="empty-routes">
-                <p>노선을 먼저 조회해주세요.</p>
-              </div>
-            ) : reservations.length === 0 ? (
-              <div className="empty-routes">
-                <p>조회된 노선이 없습니다.</p>
-              </div>
-            ) : (
-              <div className="routes-table-wrapper">
-                <table className="routes-table">
-                  <thead>
-                    <tr>
-                      <th>출발일시</th>
-                      <th>구분</th>
-                      <th>보유</th>
-                      <th>잔여</th>
-                      <th>예약</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reservations.map((route) => (
-                      <tr key={route.id}>
-                        <td>{route.departureTime}</td>
-                        <td>{route.routeName}</td>
-                        <td>{route.totalSeats}석</td>
-                        <td className={route.availableSeats > 0 ? 'seats-available' : 'seats-full'}>
-                          {route.availableSeats > 0 ? `${route.availableSeats}석` : '매진'}
-                        </td>
-                        <td>
-                          <button 
-                            className="btn-book"
-                            disabled={!route.isOpen || route.availableSeats === 0}
-                            onClick={() => navigate('/reservation')}
-                          >
-                            {route.isOpen && route.availableSeats > 0 ? '예약' : '불가'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {reservationStep === 'list' && (
+              <>
+                {!hasSearched ? (
+                  <div className="empty-routes">
+                    <p>노선을 먼저 조회해주세요.</p>
+                  </div>
+                ) : reservations.length === 0 ? (
+                  <div className="empty-routes">
+                    <p>조회된 노선이 없습니다.</p>
+                  </div>
+                ) : (
+                  <div className="routes-table-wrapper">
+                    <table className="routes-table">
+                      <thead>
+                        <tr>
+                          <th>출발일시</th>
+                          <th>구분</th>
+                          <th>보유</th>
+                          <th>잔여</th>
+                          <th>예약</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reservations.map((route) => (
+                          <tr key={route.id}>
+                            <td>{route.departureDate} {route.departureTime}</td>
+                            <td>{route.routeName}</td>
+                            <td>{route.totalSeats}석</td>
+                            <td className={route.availableSeats > 0 ? 'seats-available' : 'seats-full'}>
+                              {route.availableSeats > 0 ? `${route.availableSeats}석` : '매진'}
+                            </td>
+                            <td>
+                              <button 
+                                className="btn-book"
+                                disabled={!route.isOpen || route.availableSeats === 0}
+                                onClick={() => handleReservationClick(route)}
+                              >
+                                {route.isOpen && route.availableSeats > 0 ? '예약' : '불가'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
 
-                {/* Pagination */}
-                <div className="pagination">
-                  <button className="page-btn">«</button>
-                  <button className="page-btn">‹</button>
-                  <button className="page-btn active">1</button>
-                  <button className="page-btn">›</button>
-                  <button className="page-btn">»</button>
+                    {/* Footer Links */}
+                    <div className="footer-links">
+                      <a href="#">[이용약관]</a>
+                      <a href="#">[개인정보 수집 및 활용]</a>
+                      <a href="#">[개인정보 취급방침안내]</a>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* 예약 인원 선택 단계 */}
+            {reservationStep === 'selectSeats' && selectedRoute && (
+              <div className="reservation-step">
+                <h3 className="step-title">탑승인원 정보</h3>
+                <div className="step-content">
+                  <div className="info-row">
+                    <span className="info-label">노선구분</span>
+                    <span className="info-value">{selectedRoute.busType}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">일시</span>
+                    <span className="info-value">{selectedRoute.departureDate} {selectedRoute.departureTime}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">탑승지</span>
+                    <span className="info-value">{selectedRoute.routeName}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">도착지</span>
+                    <span className="info-value">{selectedRoute.busType === '등교' ? '한서대' : selectedRoute.routeName}</span>
+                  </div>
+
+                  <div className="seat-selection">
+                    <label className="seat-label">※ 탑승인원 선택</label>
+                    <select 
+                      className="seat-select"
+                      value={seatCount}
+                      onChange={(e) => setSeatCount(parseInt(e.target.value))}
+                    >
+                      {[...Array(Math.min(selectedRoute.availableSeats, 10))].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}명</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="step-buttons">
+                    <button className="btn-cancel" onClick={handleCancelReservation}>
+                      취소
+                    </button>
+                    <button className="btn-next" onClick={handleSeatSelection}>
+                      다음단계
+                    </button>
+                  </div>
                 </div>
+              </div>
+            )}
 
-                {/* Footer Links */}
-                <div className="footer-links">
-                  <a href="#">[이용약관]</a>
-                  <a href="#">[개인정보 수집 및 활용]</a>
-                  <a href="#">[개인정보 취급방침안내]</a>
+            {/* 예약 확인 단계 */}
+            {reservationStep === 'confirm' && selectedRoute && (
+              <div className="reservation-step">
+                <h3 className="step-title">선택내용</h3>
+                <div className="step-content">
+                  <div className="info-row">
+                    <span className="info-label">노선구분</span>
+                    <span className="info-value">{selectedRoute.busType}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">일시</span>
+                    <span className="info-value">{selectedRoute.departureDate} {selectedRoute.departureTime}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">탑승지</span>
+                    <span className="info-value">{selectedRoute.routeName}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">도착지</span>
+                    <span className="info-value">{selectedRoute.busType === '등교' ? '한서대' : selectedRoute.routeName}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">인원수</span>
+                    <span className="info-value">{seatCount}명</span>
+                  </div>
+                  <div className="info-row total">
+                    <span className="info-label">요금</span>
+                    <span className="info-value">{(seatCount * 8000).toLocaleString()}원</span>
+                  </div>
+
+                  <div className="step-buttons">
+                    <button className="btn-cancel" onClick={handleCancelReservation}>
+                      취소
+                    </button>
+                    <button className="btn-confirm" onClick={handleConfirmReservation}>
+                      다음단계
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -16,12 +16,14 @@ class BusRouteCreate(BaseModel):
     route_name: str
     route_id: str
     bus_type: str = "등교"  # "등교" 또는 "하교"
+    departure_date: str  # "YYYY-MM-DD" 형식
     departure_time: str  # "HH:MM" 형식
     total_seats: int = 30
 
 class BusRouteUpdate(BaseModel):
     route_name: Optional[str] = None
     bus_type: Optional[str] = None
+    departure_date: Optional[str] = None
     departure_time: Optional[str] = None
     total_seats: Optional[int] = None
     available_seats: Optional[int] = None
@@ -68,6 +70,7 @@ async def create_route(route: BusRouteCreate):
             "route_name": route.route_name,
             "route_id": route.route_id,
             "bus_type": route.bus_type,
+            "departure_date": route.departure_date,
             "departure_time": route.departure_time,
             "total_seats": route.total_seats,
             "available_seats": route.total_seats,
@@ -93,6 +96,8 @@ async def update_route(route_id: str, route: BusRouteUpdate):
             update_data["route_name"] = route.route_name
         if route.bus_type is not None:
             update_data["bus_type"] = route.bus_type
+        if route.departure_date is not None:
+            update_data["departure_date"] = route.departure_date
         if route.departure_time is not None:
             update_data["departure_time"] = route.departure_time
         if route.total_seats is not None:
