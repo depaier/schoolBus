@@ -255,191 +255,218 @@ function HomeContent({ isLoggedIn }) {
 
   return (
     <div className="home-page">
-      {/* 메인 컨텐츠 */}
-      <div className="main-layout">
-        {/* 좌측 사이드바 - 검색 */}
-        <aside className="sidebar-left">
-          {!isLoggedIn ? (
-            <div className="login-required-box">
-              <h3>🔒 로그인이 필요합니다</h3>
-              <p>노선 조회는 로그인 후 이용 가능합니다.</p>
-              <button className="btn-login-redirect" onClick={() => navigate('/login')}>
-                로그인하러 가기
-              </button>
-            </div>
-          ) : (
-            <div className="search-section">
-              <h3>🔍 버스 조회</h3>
-            
-            <div className="form-group">
-              <label>구분</label>
-              <div className="radio-group">
-                <label className="radio-label">
-                  <input 
-                    type="radio" 
-                    value="등교" 
-                    checked={busType === '등교'}
-                    onChange={(e) => setBusType(e.target.value)}
-                  />
-                  <span>등교</span>
-                </label>
-                <label className="radio-label">
-                  <input 
-                    type="radio" 
-                    value="하교" 
-                    checked={busType === '하교'}
-                    onChange={(e) => setBusType(e.target.value)}
-                  />
-                  <span>하교</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>노선명</label>
-              <select 
-                className="form-input"
-                value={routeName}
-                onChange={(e) => setRouteName(e.target.value)}
-              >
-              <option value="">선택</option>
-              <option value="A">서울</option>
-              <option value="B">인천</option>
-              <option value="C">안산</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>조회 날짜</label>
-              <DatePicker
-                selected={selectedDate}
-                onChange={(date) => setSelectedDate(date)}
-                dateFormat="yyyy-MM-dd"
-                className="form-input date-input"
-              />
-            </div>
-
-            <button className="search-btn" onClick={fetchRoutes}>
-              🔍 조회하기
+      {!isLoggedIn ? (
+        <div className="login-required-container">
+          <div className="login-required-box">
+            <h3>🔒 로그인이 필요합니다</h3>
+            <p>노선 조회는 로그인 후 이용 가능합니다.</p>
+            <button className="btn-login-redirect" onClick={() => navigate('/login')}>
+              로그인하러 가기
             </button>
           </div>
-          )}
-
-          {/* 예매 상태 */}
-          {isLoggedIn && (
-          <div className="monitoring-mini">
-            <h4>예매 상태</h4>
-            <div className="status-badge">
-              <span className={`status-dot ${reservationStatus.is_open ? 'open' : 'closed'}`}></span>
-              <span>{reservationStatus.is_open ? '예매 오픈' : '예매 마감'}</span>
-            </div>
-            <button className="btn-start-mini" onClick={refreshStatus}>
-              상태 새로고침
-            </button>
-          </div>
-          )}
-        </aside>
-
-        {/* 중앙 컨텐츠 */}
-        <main className="center-content">
-          <div className="info-section">
-            <div className="today-info">
-              <div className="info-label">TODAY</div>
-              <h2 className="info-date">{new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</h2>
-              <div className="contact-box">
-                <p className="contact-title">고객센터</p>
-                <p className="contact-tel">📞 TEL : 031-123-4567</p>
-                <p className="contact-email">✉️ bus@hsu.ac.kr</p>
-                <p className="contact-hours">⏰ 운영시간: 평일 09:00 ~ 18:00</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="notice-box">
-            <h3>📢 예약 시 주의사항</h3>
-            <div className="notice-content">
-              <p>※ 예약 마감은 버스 출발 10분 전까지 가능합니다.</p>
-              <p>※ 예약 없이 탑승 시 승차가 거부될 수 있습니다.</p>
-              <p>※ 취소 수수료 및 미탑승 위약금이 발생할 수 있습니다.</p>
-            </div>
-
-            <table className="notice-table">
-              <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>등하교</th>
-                  <th>내용 및 수수료</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>예약</td>
-                  <td>공통</td>
-                  <td>버스 출발 10분 전까지 예약 가능</td>
-                </tr>
-                <tr>
-                  <td>예약 취소</td>
-                  <td>공통</td>
-                  <td>버스 출발 10분 전까지 취소 수수료 없음</td>
-                </tr>
-                <tr>
-                  <td>미탑승</td>
-                  <td>공통</td>
-                  <td>예약 후 미탑승 시 위약금 발생</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </main>
-
-        {/* 우측 사이드바 - 예약 */}
-        <aside className="sidebar-right">
-          <div className="reservation-panel">
-            <h3>🚌 배차 조회 / 신청</h3>
-            
-            <div className="tab-buttons">
-              <button 
-                className={activeTab === '이용안내' ? 'tab-btn active' : 'tab-btn'}
-                onClick={() => setActiveTab('이용안내')}
-              >
-                이용안내
-              </button>
-              <button 
-                className={activeTab === '개인정보' ? 'tab-btn active' : 'tab-btn'}
-                onClick={() => setActiveTab('개인정보')}
-              >
-                개인정보
-              </button>
-            </div>
-
-            <div className="routes-list">
-              {reservations.length === 0 ? (
-                <div className="empty-state">
-                  <p>🔍 노선을 먼저 조회해주세요</p>
+        </div>
+      ) : (
+        <div className="main-container">
+          {/* 좌측 패널 - 검색 및 정보 */}
+          <div className="left-panel">
+            {/* 검색 섹션 */}
+            <div className="search-box">
+              <div className="form-group">
+                <label>구분</label>
+                <div className="radio-group">
+                  <label className="radio-option">
+                    <input 
+                      type="radio" 
+                      value="등교" 
+                      checked={busType === '등교'}
+                      onChange={(e) => setBusType(e.target.value)}
+                    />
+                    <span>등교</span>
+                  </label>
+                  <label className="radio-option">
+                    <input 
+                      type="radio" 
+                      value="하교" 
+                      checked={busType === '하교'}
+                      onChange={(e) => setBusType(e.target.value)}
+                    />
+                    <span>하교</span>
+                  </label>
                 </div>
-              ) : (
-                reservations.map((route) => (
-                  <div key={route.id} className="route-card-mini">
-                    <div className="route-header-mini">
-                      <h4>{route.routeName}</h4>
-                      <span className={`badge ${route.isOpen ? 'badge-open' : 'badge-closed'}`}>
-                        {route.isOpen ? '예매가능' : '마감'}
-                      </span>
-                    </div>
-                    <div className="route-info-mini">
-                      <p>🕐 출발: {route.departureTime}</p>
-                      <p>💺 좌석: {route.availableSeats}/{route.totalSeats}</p>
-                    </div>
-                    {route.isOpen && (
-                      <button className="btn-reserve" onClick={() => navigate('/reservation')}>예약하기</button>
-                    )}
-                  </div>
-                ))
-              )}
+              </div>
+
+              <div className="form-group">
+                <label>노선명</label>
+                <select 
+                  className="form-select"
+                  value={routeName}
+                  onChange={(e) => setRouteName(e.target.value)}
+                >
+                  <option value="">선택</option>
+                  <option value="A">서울</option>
+                  <option value="B">인천</option>
+                  <option value="C">안산</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>조회시작</label>
+                <input 
+                  type="date"
+                  className="form-input"
+                  value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
+                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                />
+              </div>
+
+              <button className="btn-search" onClick={fetchRoutes}>
+                조회
+              </button>
+            </div>
+
+            {/* TODAY 정보 */}
+            <div className="today-box">
+              <div className="today-label">TODAY</div>
+              <div className="today-date">
+                {new Date().toLocaleDateString('ko-KR', { 
+                  year: 'numeric', 
+                  month: '2-digit', 
+                  day: '2-digit',
+                  weekday: 'short'
+                }).replace(/\. /g, '.').replace(/\.$/, '')}
+              </div>
+              <div className="contact-info">
+                <p className="contact-title">고객센터</p>
+                <p>TEL : 041-688-7610</p>
+                <p>kornsbus@kornsbus.co.kr</p>
+                <p className="contact-hours">운영시간 (평일9시~18시)</p>
+                <p className="contact-hours">온라인 09시 ~ 18시</p>
+              </div>
+            </div>
+
+            {/* 예약시 주의사항 */}
+            <div className="notice-section">
+              <h4>예약시 주의사항</h4>
+              <ul className="notice-list">
+                <li>예약마감은 버스출발 10분전까지 가능, 하교는 기준시 등교(버스시간표 따라 조기마감 될수 있음)</li>
+                <li>탑승승차 및 미탑승은 승차거부 됩니다. 지정시간에 탑지 못한 경우</li>
+                <li>취소수수료 및 미탑승 위약금 (예약취소시 서비스 페널티 발생)</li>
+              </ul>
+
+              <table className="penalty-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>등·하교</th>
+                    <th>내용 및 수수료</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>마감시간</td>
+                    <td>하교</td>
+                    <td>당일 18시 10분 이후 예약 시 수수료 500원 추가(500원)</td>
+                  </tr>
+                  <tr>
+                    <td>예약</td>
+                    <td>하교</td>
+                    <td>(단, 44석 예약 완료시 추가 예약 불가)</td>
+                  </tr>
+                  <tr>
+                    <td>마감시간</td>
+                    <td>하교</td>
+                    <td>- 당일 18시 10분까지 취소수수료 면제</td>
+                  </tr>
+                  <tr>
+                    <td>예약 취소</td>
+                    <td>하교</td>
+                    <td>- 당일 18시 10분 ~ 버스 출발까지 40%의 수수료 징수 후 환불</td>
+                  </tr>
+                  <tr>
+                    <td>예약 후 미탑승 시</td>
+                    <td>공통</td>
+                    <td>- 등교버스 예약 미탑 시 버스 출발 전 30%의 수수료 징수 후 환불</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td>마지막 신청 버스출발시간 기준 12시간이내 보고 환불불가(미탑승 소멸)</td>
+                  </tr>
+                  <tr>
+                    <td>환불방법</td>
+                    <td></td>
+                    <td>환불불 금액은 포인트로 전환 됩니다. (단, 물건, 서비스 등 환불)</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <p className="notice-footer">※ 미탑승은 예약 후 예약취소를 하지 않아 탑승하지 못한 경우를 말함.</p>
             </div>
           </div>
-        </aside>
-      </div>
+
+          {/* 우측 패널 - 배차조회/선택 */}
+          <div className="right-panel">
+            <h2 className="panel-title">배차조회 / 선택</h2>
+            
+            {reservations.length === 0 ? (
+              <div className="empty-routes">
+                <p>노선을 먼저 조회주세요.</p>
+              </div>
+            ) : (
+              <div className="routes-table-wrapper">
+                <table className="routes-table">
+                  <thead>
+                    <tr>
+                      <th>출발일시</th>
+                      <th>구분</th>
+                      <th>보유</th>
+                      <th>잔여</th>
+                      <th>예약</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reservations.map((route) => (
+                      <tr key={route.id}>
+                        <td>{route.departureTime}</td>
+                        <td>{route.routeName}</td>
+                        <td>{route.totalSeats}석</td>
+                        <td className={route.availableSeats > 0 ? 'seats-available' : 'seats-full'}>
+                          {route.availableSeats > 0 ? `${route.availableSeats}석` : '매진'}
+                        </td>
+                        <td>
+                          <button 
+                            className="btn-book"
+                            disabled={!route.isOpen || route.availableSeats === 0}
+                            onClick={() => navigate('/reservation')}
+                          >
+                            {route.isOpen && route.availableSeats > 0 ? '예약' : '불가'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Pagination */}
+                <div className="pagination">
+                  <button className="page-btn">«</button>
+                  <button className="page-btn">‹</button>
+                  <button className="page-btn active">1</button>
+                  <button className="page-btn">›</button>
+                  <button className="page-btn">»</button>
+                </div>
+
+                {/* Footer Links */}
+                <div className="footer-links">
+                  <a href="#">[이용약관]</a>
+                  <a href="#">[개인정보 수집 및 활용]</a>
+                  <a href="#">[개인정보 취급방침안내]</a>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 알림 설정 섹션 */}
       <div className="notification-section">

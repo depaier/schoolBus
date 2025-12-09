@@ -1,117 +1,85 @@
-/* Home.css - 버스 예약 시스템 UI */
+/* Home.css - 두번째 이미지 레이아웃 */
 .home-page {
-  min-height: 100vh;
-  background: #f5f5f5;
-  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  min-height: calc(100vh - 80px);
+  background-color: #f5f5f5;
+  padding: 20px;
 }
 
-/* 헤더 */
-.home-header {
-  background: #1a1a1a;
-  color: white;
-  padding: 15px 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.header-info .today-date {
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-/* 메인 레이아웃 */
-.main-layout {
-  max-width: 1400px;
-  margin: 20px auto;
-  padding: 0 20px;
-  display: grid;
-  grid-template-columns: 280px 1fr 350px;
-  gap: 20px;
-}
-
-/* 좌측 사이드바 - 검색 */
-.sidebar-left {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 로그인 필요 박스 */
-.login-required-box {
+/* 로그인 필요 컨테이너 */
+.login-required-container {
+  max-width: 600px;
+  margin: 100px auto;
+  padding: 40px;
   background: white;
-  padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
 .login-required-box h3 {
   color: #333;
   margin-bottom: 15px;
-  font-size: 18px;
+  font-size: 24px;
 }
 
 .login-required-box p {
   color: #666;
-  margin-bottom: 20px;
-  font-size: 14px;
+  margin-bottom: 25px;
+  font-size: 16px;
 }
 
 .btn-login-redirect {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #333;
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 14px 32px;
+  border-radius: 6px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .btn-login-redirect:hover {
+  background: #555;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.search-section {
+/* 메인 컨테이너 - 2열 레이아웃 */
+.main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+}
+
+/* 좌측 패널 */
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 검색 박스 */
+.search-box {
   background: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.search-section h3 {
-  margin: 0 0 20px 0;
-  font-size: 18px;
-  color: #333;
-  border-bottom: 2px solid #1a1a1a;
-  padding-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
   color: #333;
+  margin-bottom: 8px;
 }
 
 .radio-group {
@@ -119,482 +87,602 @@
   gap: 15px;
 }
 
-.radio-label {
+.radio-option {
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
   font-size: 14px;
+  color: #666;
 }
 
-.radio-label input[type="radio"] {
+.radio-option input[type="radio"] {
   cursor: pointer;
 }
 
+.form-select,
 .form-input {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
-  box-sizing: border-box;
+  color: #333;
+  background-color: white;
+  transition: border-color 0.2s ease;
 }
 
+.form-select:focus,
 .form-input:focus {
   outline: none;
-  border-color: #1a1a1a;
+  border-color: #333;
 }
 
-.date-input {
-  width: 100%;
-}
-
-.search-btn {
+.btn-search {
   width: 100%;
   padding: 12px;
-  background: #1a1a1a;
+  background-color: #333;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
+  margin-top: 10px;
 }
 
-.search-btn:hover {
-  background: #333;
+.btn-search:hover {
+  background-color: #555;
 }
 
-/* 모니터링 미니 */
-.monitoring-mini {
+/* TODAY 박스 */
+.today-box {
   background: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.monitoring-mini h4 {
-  margin: 0 0 15px 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.status-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  margin-bottom: 15px;
-}
-
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-.status-dot.open {
-  background: #4caf50;
-}
-
-.status-dot.closed {
-  background: #f44336;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.btn-start-mini,
-.btn-stop-mini {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-start-mini {
-  background: #4caf50;
-  color: white;
-}
-
-.btn-start-mini:hover {
-  background: #45a049;
-}
-
-.btn-stop-mini {
-  background: #f44336;
-  color: white;
-}
-
-.btn-stop-mini:hover {
-  background: #da190b;
-}
-
-/* 중앙 컨텐츠 */
-.center-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.info-section {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.today-info {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
 
-.info-label {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 5px;
+.today-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #999;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
 }
 
-.info-date {
-  font-size: 24px;
-  font-weight: bold;
+.today-date {
+  font-size: 18px;
+  font-weight: 700;
   color: #333;
-  margin: 0 0 20px 0;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
 }
 
-.contact-box {
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 8px;
+.contact-info {
   text-align: left;
 }
 
 .contact-title {
-  font-weight: bold;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
   margin-bottom: 10px;
-  color: #333;
 }
 
-.contact-tel,
-.contact-email,
-.contact-hours {
-  margin: 5px 0;
-  font-size: 14px;
-  color: #666;
-}
-
-/* 공지사항 */
-.notice-box {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.notice-box h3 {
-  margin: 0 0 20px 0;
-  font-size: 20px;
-  color: #333;
-}
-
-.notice-content {
-  padding: 15px;
-  background: #fff3cd;
-  border-left: 4px solid #ffc107;
-  margin-bottom: 20px;
-}
-
-.notice-content p {
-  margin: 8px 0;
-  font-size: 14px;
-  color: #856404;
-}
-
-.notice-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.notice-table th {
-  background: #f5f5f5;
-  padding: 12px;
-  border: 1px solid #ddd;
-  font-weight: 600;
-  text-align: center;
-}
-
-.notice-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: center;
-}
-
-.notice-table tbody tr:hover {
-  background: #fafafa;
-}
-
-/* 우측 사이드바 - 예약 */
-.sidebar-right {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  height: fit-content;
-}
-
-.reservation-panel h3 {
-  margin: 0 0 20px 0;
-  font-size: 18px;
-  color: #333;
-  text-align: center;
-  border-bottom: 2px solid #1a1a1a;
-  padding-bottom: 10px;
-}
-
-.tab-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.tab-btn {
-  flex: 1;
-  padding: 10px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+.contact-info p {
   font-size: 13px;
-  cursor: pointer;
-  transition: all 0.3s;
+  color: #666;
+  margin: 5px 0;
+  line-height: 1.6;
 }
 
-.tab-btn.active {
-  background: #1a1a1a;
-  color: white;
-  border-color: #1a1a1a;
-}
-
-.tab-btn:hover {
-  background: #e0e0e0;
-}
-
-.tab-btn.active:hover {
-  background: #333;
-}
-
-.routes-list {
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
+.contact-hours {
+  font-size: 12px;
   color: #999;
 }
 
-.empty-state p {
-  margin: 0;
-  font-size: 16px;
-}
-
-.route-card-mini {
-  padding: 15px;
-  border: 1px solid #e0e0e0;
+/* 주의사항 섹션 */
+.notice-section {
+  background: white;
+  padding: 25px;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.notice-section h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
   margin-bottom: 15px;
-  transition: all 0.3s;
 }
 
-.route-card-mini:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-color: #1a1a1a;
+.notice-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
 }
 
-.route-header-mini {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.notice-list li {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.7;
+  margin-bottom: 8px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.notice-list li:before {
+  content: "※";
+  position: absolute;
+  left: 0;
+  color: #999;
+}
+
+.penalty-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
   margin-bottom: 10px;
 }
 
-.route-header-mini h4 {
-  margin: 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.badge-open {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.badge-closed {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.route-info-mini p {
-  margin: 5px 0;
-  font-size: 14px;
+.penalty-table th,
+.penalty-table td {
+  border: 1px solid #ddd;
+  padding: 8px 6px;
+  text-align: center;
   color: #666;
 }
 
-.btn-reserve {
+.penalty-table th {
+  background-color: #f8f8f8;
+  font-weight: 600;
+  color: #333;
+}
+
+.penalty-table td {
+  line-height: 1.5;
+}
+
+.notice-footer {
+  font-size: 11px;
+  color: #999;
+  margin: 10px 0 0 0;
+  line-height: 1.5;
+}
+
+/* 우측 패널 */
+.right-panel {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 25px 0;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #333;
+}
+
+.empty-routes {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-routes p {
+  font-size: 14px;
+  color: #999;
+}
+
+/* 노선 테이블 */
+.routes-table-wrapper {
+  overflow-x: auto;
+}
+
+.routes-table {
   width: 100%;
-  padding: 10px;
-  background: #1a1a1a;
+  border-collapse: collapse;
+  border-top: 2px solid #333;
+}
+
+.routes-table thead {
+  background-color: #f8f8f8;
+}
+
+.routes-table th {
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+}
+
+.routes-table td {
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  border-bottom: 1px solid #eee;
+}
+
+.routes-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.seats-available {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.seats-full {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.btn-book {
+  padding: 6px 16px;
+  background-color: #dc3545;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 10px;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
 }
 
-.btn-reserve:hover {
-  background: #333;
+.btn-book:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
 }
 
-/* 알림 섹션 */
+.btn-book:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 25px 0;
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #666;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+}
+
+.page-btn.active {
+  background-color: #333;
+  color: white;
+  border-color: #333;
+  font-weight: 600;
+}
+
+/* Footer Links */
+.footer-links {
+  text-align: center;
+  padding: 20px 0 0 0;
+  border-top: 1px solid #eee;
+}
+
+.footer-links a {
+  color: #666;
+  text-decoration: none;
+  font-size: 12px;
+  margin: 0 8px;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #333;
+  text-decoration: underline;
+}
+
+/* 알림 섹션 (하단) */
 .notification-section {
   max-width: 1400px;
-  margin: 20px auto;
+  margin: 30px auto 0;
+  background: white;
   padding: 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  color: white;
-  margin-left: 20px;
-  margin-right: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .notification-section h2 {
-  margin: 0 0 15px 0;
-  font-size: 24px;
-  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
 }
 
 .notification-content {
-  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .notification-description {
-  margin: 0 0 25px 0;
-  font-size: 16px;
-  opacity: 0.95;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .notification-controls {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .btn-enable-notification {
-  padding: 18px 50px;
-  font-size: 18px;
-  font-weight: 700;
-  background: white;
-  color: #667eea;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   border: none;
-  border-radius: 50px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-enable-notification:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-icon {
+  font-size: 18px;
 }
 
 .notification-enabled {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 15px;
 }
 
 .enabled-badge {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 30px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid white;
-  border-radius: 30px;
-  font-size: 16px;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  color: #155724;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .check-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: white;
-  color: #4caf50;
-  border-radius: 50%;
-  font-weight: bold;
+  font-size: 18px;
 }
 
 .btn-disable-notification {
-  padding: 10px 25px;
+  padding: 10px 20px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
 .btn-disable-notification:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background-color: #5a6268;
 }
 
 .notification-warning {
   margin-top: 15px;
-  padding: 15px;
-  background: rgba(255, 152, 0, 0.2);
-  border: 2px solid #ff9800;
+  padding: 12px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* 노선 목록, 안내 메시지 섹션 (하단) */
+.routes-section,
+.info-section {
+  max-width: 1400px;
+  margin: 30px auto 0;
+  background: white;
+  padding: 30px;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.routes-section h2,
+.info-section h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.routes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.route-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.route-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.route-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.route-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
-/* 반응형 */
+.badge.open {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.badge.closed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.route-info p {
+  font-size: 13px;
+  color: #666;
+  margin: 6px 0;
+}
+
+.btn-reserve {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+}
+
+.btn-reserve:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.info-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-section li {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.8;
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.info-section li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #007bff;
+  font-weight: bold;
+}
+
+/* Responsive Design */
 @media (max-width: 1200px) {
-  .main-layout {
+  .main-container {
     grid-template-columns: 1fr;
   }
-  
-  .sidebar-left,
-  .sidebar-right {
-    max-width: 100%;
+
+  .left-panel {
+    order: 2;
+  }
+
+  .right-panel {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-page {
+    padding: 10px;
+  }
+
+  .main-container {
+    gap: 15px;
+  }
+
+  .search-box,
+  .today-box,
+  .notice-section,
+  .right-panel {
+    padding: 20px;
+  }
+
+  .panel-title {
+    font-size: 16px;
+  }
+
+  .routes-table th,
+  .routes-table td {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .btn-book {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .notification-section,
+  .routes-section,
+  .info-section {
+    padding: 20px;
+  }
+
+  .routes-grid {
+    grid-template-columns: 1fr;
   }
 }
