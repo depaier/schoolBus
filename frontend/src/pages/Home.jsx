@@ -357,20 +357,27 @@ function HomeContent({ isLoggedIn }) {
       // 노선을 찾을 수 없으면 전체 노선 다시 로드
       await fetchAllRoutes()
       
-      // 다시 찾기
+      // 약간의 지연 후 다시 찾기 (상태 업데이트 대기)
+      await new Promise(resolve => setTimeout(resolve, 100))
       route = allRoutes.find(r => r.routeId === data.route_id)
     }
     
     if (route) {
       console.log('✅ 노선 찾음:', route)
-      // reservations 배열에 해당 노선만 설정 (조회 결과처럼)
+      console.log('📍 현재 reservationStep:', reservationStep)
+      
+      // 먼저 list 단계로 초기화하고 데이터 설정
+      setReservationStep('list')
       setReservations([route])
       setHasSearched(true)
       
-      // 바로 인원 선택 단계로 이동
-      setSelectedRoute(route)
-      setSeatCount(1)
-      setReservationStep('selectSeats')
+      // 약간의 지연 후 인원 선택 단계로 이동 (DOM 업데이트 대기)
+      setTimeout(() => {
+        console.log('🎯 인원 선택 단계로 전환')
+        setSelectedRoute(route)
+        setSeatCount(1)
+        setReservationStep('selectSeats')
+      }, 50)
     } else {
       console.error('❌ 노선을 찾을 수 없습니다:', data.route_id)
       alert('해당 노선을 찾을 수 없습니다.')
