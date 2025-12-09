@@ -13,6 +13,7 @@ function AdminPage() {
 
   const [newRoute, setNewRoute] = useState({
     routeName: '',
+    busType: '등교',
     departureTime: '',
     totalSeats: 30
   })
@@ -52,6 +53,7 @@ function AdminPage() {
         id: route.id,
         routeName: route.route_name,
         routeId: route.route_id,
+        busType: route.bus_type || '등교',
         departureTime: route.departure_time,
         availableSeats: route.available_seats,
         totalSeats: route.total_seats,
@@ -149,6 +151,7 @@ function AdminPage() {
       await axios.post(`${API_BASE_URL}/api/routes`, {
         route_name: newRoute.routeName,
         route_id: routeId,
+        bus_type: newRoute.busType,
         departure_time: newRoute.departureTime,
         total_seats: newRoute.totalSeats
       });
@@ -157,7 +160,7 @@ function AdminPage() {
       await fetchRoutes();
       
       // 입력 필드 초기화
-      setNewRoute({ routeName: '', departureTime: '', totalSeats: 30 });
+      setNewRoute({ routeName: '', busType: '등교', departureTime: '', totalSeats: 30 });
       
       alert('노선이 추가되었습니다.');
     } catch (err) {
@@ -243,10 +246,18 @@ function AdminPage() {
         <div className="add-route-form">
           <input
             type="text"
-            placeholder="노선명 (예: 등교 노선 B)"
+            placeholder="노선명 (예: 경기(송내))"
             value={newRoute.routeName}
             onChange={(e) => setNewRoute({ ...newRoute, routeName: e.target.value })}
           />
+          <select
+            value={newRoute.busType}
+            onChange={(e) => setNewRoute({ ...newRoute, busType: e.target.value })}
+            style={{ padding: '10px', fontSize: '14px', borderRadius: '4px', border: '1px solid #ddd' }}
+          >
+            <option value="등교">등교</option>
+            <option value="하교">하교</option>
+          </select>
           <input
             type="time"
             placeholder="출발시간"
@@ -286,6 +297,7 @@ function AdminPage() {
 
               <div className="reservation-info">
                 <p><strong>노선 ID:</strong> {reservation.routeId}</p>
+                <p><strong>구분:</strong> {reservation.busType}</p>
                 <p><strong>출발 시간:</strong> {reservation.departureTime}</p>
                 <p><strong>남은 좌석:</strong> {reservation.availableSeats} / {reservation.totalSeats}</p>
               </div>

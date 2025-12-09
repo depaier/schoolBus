@@ -49,10 +49,12 @@ class ErrorBoundary extends Component {
 function HomeContent({ isLoggedIn }) {
   const navigate = useNavigate()
   const [reservations, setReservations] = useState([])
+  const [allRoutes, setAllRoutes] = useState([]) // 전체 노선 목록
   const [busType, setBusType] = useState('등교')
   const [routeName, setRouteName] = useState('')
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [activeTab, setActiveTab] = useState('이용안내')
+  const [hasSearched, setHasSearched] = useState(false) // 조회 여부
 
   const [reservationStatus, setReservationStatus] = useState({
     is_open: false,
@@ -169,7 +171,7 @@ function HomeContent({ isLoggedIn }) {
     alert('알림이 비활성화되었습니다.')
   }
 
-  // 컴포넌트 마운트 시 알림 권한 상태 확인 및 노선 데이터 로드
+  // 컴포넌트 마운트 시 알림 권한 상태 확인 및 전체 노선 목록 로드
   useEffect(() => {
     // 🔥 API URL 확인 (디버깅용)
     console.log('🌐 사용 중인 API URL:', API_BASE_URL)
@@ -193,58 +195,73 @@ function HomeContent({ isLoggedIn }) {
       console.log('✅ 알림 활성화 상태 복원됨')
     }
     
-    // 🔥 노선 데이터 및 예매 상태 로드
-    fetchRoutes()
+    // 🔥 전체 노선 목록 로드 (드롭다운용)
+    fetchAllRoutes()
     fetchReservationStatus()
   }, [])
   
-  // 🔥 isLoggedIn이 변경될 때마다 노선 데이터 다시 로드
+  // 🔥 isLoggedIn이 변경될 때마다 전체 노선 목록 다시 로드
   useEffect(() => {
     if (isLoggedIn) {
-      console.log('✅ 로그인 상태 변경 감지 - 노선 데이터 로드')
-      fetchRoutes()
+      console.log('✅ 로그인 상태 변경 감지 - 전체 노선 목록 로드')
+      fetchAllRoutes()
     }
   }, [isLoggedIn])
 
-  // 🔥 Supabase에서 노선 데이터 가져오기
-  const fetchRoutes = async () => {
-    // localStorage에서 직접 로그인 상태 확인 (props보다 신뢰성 높음)
+  // 🔥 전체 노선 목록 가져오기 (드롭다운용)
+  const fetchAllRoutes = async () => {
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true'
     
     if (!loggedIn) {
-      console.log('⚠️ 로그인되지 않음 - 로그인 페이지로 이동')
-      // alert 제거 - 페이지 로드 시 불필요한 알림 방지
-      // navigate('/login')
+      console.log('⚠️ 로그인되지 않음')
       return
     }
 
     try {
       const response = await axios.get(`${API_BASE_URL}/api/routes`)
-      console.log('✅ Home - 노선 API 응답:', response.data)
+      console.log('✅ Home - 전체 노선 API 응답:', response.data)
       
-      // 응답 데이터 검증
       if (!response.data || !response.data.routes) {
         console.error('❌ API 응답 형식이 올바르지 않습니다:', response.data)
         return
       }
       
-      // 백엔드 데이터를 프론트엔드 형식으로 변환
       const routes = response.data.routes.map(route => ({
         id: route.id,
         routeName: route.route_name,
         routeId: route.route_id,
+        busType: route.bus_type || '등교',
         departureTime: route.departure_time,
         availableSeats: route.available_seats,
         totalSeats: route.total_seats,
         isOpen: route.is_open
       }))
       
-      console.log('✅ Home - 변환된 노선:', routes)
-      setReservations(routes)
+      console.log('✅ Home - 전체 노선:', routes)
+      setAllRoutes(routes)
     } catch (err) {
-      console.error('❌ 노선 데이터 로드 실패:', err)
+      console.error('❌ 전체 노선 로드 실패:', err)
       console.error('에러 상세:', err.response?.data || err.message)
     }
+  }
+
+  // 🔥 조회 버튼 클릭 시 필터링된 노선 표시
+  const handleSearch = () => {
+    if (!busType) {
+      alert('등교/하교를 선택해주세요.')
+      return
+    }
+
+    // 등하교 구분과 노선명으로 필터링
+    let filtered = allRoutes.filter(route => route.busType === busType)
+    
+    if (routeName) {
+      filtered = filtered.filter(route => route.routeName === routeName)
+    }
+    
+    console.log('🔍 조회 결과:', filtered)
+    setReservations(filtered)
+    setHasSearched(true)
   }
 
   // 예매 상태 새로고침 (수동)
@@ -302,10 +319,15 @@ function HomeContent({ isLoggedIn }) {
                   value={routeName}
                   onChange={(e) => setRouteName(e.target.value)}
                 >
-                  <option value="">선택</option>
-                  <option value="A">서울</option>
-                  <option value="B">인천</option>
-                  <option value="C">안산</option>
+                  <option value="">전체</option>
+                  {allRoutes
+                    .filter(route => route.busType === busType)
+                    .map(route => (
+                      <option key={route.id} value={route.routeName}>
+                        {route.routeName}
+                      </option>
+                    ))
+                  }
                 </select>
               </div>
 
@@ -319,7 +341,7 @@ function HomeContent({ isLoggedIn }) {
                 />
               </div>
 
-              <button className="btn-search" onClick={fetchRoutes}>
+              <button className="btn-search" onClick={handleSearch}>
                 조회
               </button>
             </div>
@@ -408,9 +430,13 @@ function HomeContent({ isLoggedIn }) {
           <div className="right-panel">
             <h2 className="panel-title">배차조회 / 선택</h2>
             
-            {reservations.length === 0 ? (
+            {!hasSearched ? (
               <div className="empty-routes">
-                <p>노선을 먼저 조회주세요.</p>
+                <p>노선을 먼저 조회해주세요.</p>
+              </div>
+            ) : reservations.length === 0 ? (
+              <div className="empty-routes">
+                <p>조회된 노선이 없습니다.</p>
               </div>
             ) : (
               <div className="routes-table-wrapper">
@@ -534,31 +560,6 @@ function HomeContent({ isLoggedIn }) {
               ⚠️ 알림이 차단되었습니다. 브라우저 설정에서 알림을 허용해주세요.
             </div>
           )}
-        </div>
-      </div>
-
-      {/* 노선 목록 */}
-      <div className="routes-section">
-        <h2>운행 노선</h2>
-        <div className="routes-grid">
-          {reservations.map((route) => (
-            <div key={route.id} className={`route-card ${route.isOpen ? 'open' : 'closed'}`}>
-              <div className="route-header">
-                <h3>{route.routeName}</h3>
-                <span className={`badge ${route.isOpen ? 'open' : 'closed'}`}>
-                  {route.isOpen ? '예매 가능' : '예매 마감'}
-                </span>
-              </div>
-              <div className="route-info">
-                <p><strong>노선 ID:</strong> {route.routeId}</p>
-                <p><strong>출발 시간:</strong> {route.departureTime}</p>
-                <p><strong>남은 좌석:</strong> {route.availableSeats} / {route.totalSeats}석</p>
-              </div>
-              {route.isOpen && (
-                <button className="btn-reserve">예매하기</button>
-              )}
-            </div>
-          ))}
         </div>
       </div>
 
