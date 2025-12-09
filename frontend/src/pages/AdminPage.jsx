@@ -90,7 +90,8 @@ function AdminPage() {
 
     try {
       // 특정 노선의 상태 토글
-      await axios.post(`${API_BASE_URL}/api/routes/${target.routeId}/toggle`);
+      const toggleResponse = await axios.post(`${API_BASE_URL}/api/routes/${target.routeId}/toggle`);
+      const updatedRoute = toggleResponse.data.route;
 
       // 데이터 다시 로드하여 최신 상태 가져오기
       await fetchRoutes();
@@ -100,8 +101,16 @@ function AdminPage() {
       const routesResponse = await axios.get(`${API_BASE_URL}/api/routes`);
       const hasOpenRoute = routesResponse.data.routes.some(route => route.is_open);
       
+      // 노선이 오픈되었을 때만 노선 정보 전달
       const updateResponse = await axios.post(`${API_BASE_URL}/api/reservation/update`, {
-        is_open: hasOpenRoute
+        is_open: hasOpenRoute,
+        route_info: updatedRoute.is_open ? {
+          route_id: updatedRoute.route_id,
+          route_name: updatedRoute.route_name,
+          bus_type: updatedRoute.bus_type,
+          departure_date: updatedRoute.departure_date,
+          departure_time: updatedRoute.departure_time
+        } : null
       });
 
       console.log(`전체 예매 상태 업데이트: ${hasOpenRoute ? '오픈' : '마감'}`);

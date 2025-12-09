@@ -35,7 +35,7 @@ async def get_all_routes():
     모든 버스 노선 조회
     """
     try:
-        response = supabase.table("bus_routes").select("*").order("created_at").execute()
+        response = supabase.table("bus_routes").select("*").order("id").execute()
         return {
             "routes": response.data,
             "count": len(response.data)

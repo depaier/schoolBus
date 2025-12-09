@@ -9,8 +9,16 @@ from backend.services.web_push_service import web_push_service
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+class RouteInfo(BaseModel):
+    route_id: str
+    route_name: str
+    bus_type: str
+    departure_date: str
+    departure_time: str
+
 class ReservationUpdate(BaseModel):
     is_open: bool
+    route_info: RouteInfo = None
 
 @router.get("/reservation/status")
 async def get_reservation_status():
@@ -65,10 +73,26 @@ async def update_reservation_status(body: ReservationUpdate):
             if not previous_status and body.is_open:
                 logger.info("예매 오픈 감지 - 푸시 알림 전송 시작")
                 try:
+                    # 노선 정보가 있으면 포함
+                    notification_data = {}
+                    if body.route_info:
+                        notification_data = {
+                            "route_id": body.route_info.route_id,
+                            "route_name": body.route_info.route_name,
+                            "bus_type": body.route_info.bus_type,
+                            "departure_date": body.route_info.departure_date,
+                            "departure_time": body.route_info.departure_time,
+                            "action": "open_route"
+                        }
+                        notification_body = f"{body.route_info.bus_type} - {body.route_info.route_name} ({body.route_info.departure_date} {body.route_info.departure_time})"
+                    else:
+                        notification_body = "통학버스 예매가 오픈되었습니다. 지금 바로 예매하세요!"
+                    
                     push_result = await web_push_service.send_to_all_users(
                         supabase,
                         "🎉 통학버스 예매 오픈!",
-                        "통학버스 예매가 오픈되었습니다. 지금 바로 예매하세요!"
+                        notification_body,
+                        notification_data
                     )
                     logger.info(f"푸시 알림 전송 결과: {push_result}")
                 except Exception as e:

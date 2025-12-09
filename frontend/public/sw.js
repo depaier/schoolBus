@@ -134,9 +134,40 @@ self.addEventListener('push', (event) => {
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
   console.log('Service Worker: Notification clicked', event);
+  console.log('Notification data:', event.notification.data);
+  
   event.notification.close();
 
+  // 알림 데이터에서 노선 정보 추출
+  const data = event.notification.data || {};
+  const routeId = data.route_id;
+  const action = data.action;
+  
+  let targetUrl = '/';
+  
+  // 노선 오픈 알림인 경우 해당 노선으로 이동
+  if (action === 'open_route' && routeId) {
+    targetUrl = `/?route=${routeId}`;
+    console.log('Opening route:', routeId, 'URL:', targetUrl);
+  }
+
   event.waitUntil(
-    clients.openWindow('/')
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // 이미 열린 창이 있으면 그 창으로 이동
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.postMessage({
+            type: 'NOTIFICATION_CLICK',
+            data: data
+          });
+          return;
+        }
+      }
+      // 열린 창이 없으면 새 창 열기
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
   );
 });

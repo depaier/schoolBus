@@ -203,6 +203,29 @@ function HomeContent({ isLoggedIn }) {
     // 🔥 전체 노선 목록 로드 (드롭다운용)
     fetchAllRoutes()
     fetchReservationStatus()
+
+    // 🔥 URL 파라미터 확인 (알림에서 온 경우)
+    const urlParams = new URLSearchParams(window.location.search)
+    const routeId = urlParams.get('route')
+    if (routeId && isLoggedIn) {
+      console.log('🔔 알림에서 노선으로 이동:', routeId)
+      // URL 파라미터 제거
+      window.history.replaceState({}, '', '/')
+      // 노선 찾아서 이동
+      setTimeout(() => {
+        handleNotificationClick({ route_id: routeId })
+      }, 1000) // 노선 로드 대기
+    }
+
+    // Service Worker 메시지 리스너
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'NOTIFICATION_CLICK') {
+          console.log('📬 Service Worker 메시지:', event.data)
+          handleNotificationClick(event.data.data)
+        }
+      })
+    }
   }, [])
   
   // 🔥 isLoggedIn이 변경될 때마다 전체 노선 목록 다시 로드
@@ -335,6 +358,40 @@ function HomeContent({ isLoggedIn }) {
     setReservationStep('list')
     setSelectedRoute(null)
     setSeatCount(1)
+  }
+
+  // 알림 클릭 핸들러
+  const handleNotificationClick = async (data) => {
+    if (!data || !data.route_id) return
+
+    console.log('🔔 알림 클릭 처리:', data)
+
+    // 해당 노선 찾기
+    const route = allRoutes.find(r => r.routeId === data.route_id)
+    
+    if (route) {
+      console.log('✅ 노선 찾음:', route)
+      // 바로 인원 선택 단계로 이동
+      setSelectedRoute(route)
+      setSeatCount(1)
+      setReservationStep('selectSeats')
+      setHasSearched(true)
+    } else {
+      console.log('⚠️ 노선을 찾을 수 없음, 전체 노선 다시 로드')
+      // 노선을 찾을 수 없으면 전체 노선 다시 로드
+      await fetchAllRoutes()
+      
+      // 다시 찾기
+      setTimeout(() => {
+        const foundRoute = allRoutes.find(r => r.routeId === data.route_id)
+        if (foundRoute) {
+          setSelectedRoute(foundRoute)
+          setSeatCount(1)
+          setReservationStep('selectSeats')
+          setHasSearched(true)
+        }
+      }, 500)
+    }
   }
 
   return (
