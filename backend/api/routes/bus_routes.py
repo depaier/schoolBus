@@ -5,12 +5,15 @@ from typing import List, Optional
 from datetime import time
 import sys
 import os
+import logging
 
 # Supabase 클라이언트 import
 from backend.config.supabase_client import get_supabase_client
+from backend.services.web_push_service import web_push_service
 
 router = APIRouter()
 supabase = get_supabase_client()
+logger = logging.getLogger(__name__)
 
 class BusRouteCreate(BaseModel):
     route_name: str
@@ -150,13 +153,14 @@ async def toggle_route_status(route_id: str):
     특정 노선의 예매 오픈/닫기 토글
     """
     try:
-        # 현재 상태 조회
-        response = supabase.table("bus_routes").select("is_open").eq("route_id", route_id).execute()
+        # 현재 상태 조회 (전체 정보 가져오기)
+        response = supabase.table("bus_routes").select("*").eq("route_id", route_id).execute()
         
         if not response.data or len(response.data) == 0:
             raise HTTPException(status_code=404, detail="노선을 찾을 수 없습니다.")
         
-        current_status = response.data[0]["is_open"]
+        route_data = response.data[0]
+        current_status = route_data["is_open"]
         new_status = not current_status
         
         # 상태 토글
@@ -164,10 +168,42 @@ async def toggle_route_status(route_id: str):
             "is_open": new_status
         }).eq("route_id", route_id).execute()
         
-        return {
+        # 🔥 닫혀있었는데 열린 경우 푸시 알림 전송
+        push_result = None
+        if not current_status and new_status:
+            logger.info(f"노선 오픈 감지 - 푸시 알림 전송 시작: {route_id}")
+            try:
+                notification_data = {
+                    "route_id": route_data["route_id"],
+                    "route_name": route_data["route_name"],
+                    "bus_type": route_data.get("bus_type", "등교"),
+                    "departure_date": route_data.get("departure_date", ""),
+                    "departure_time": route_data.get("departure_time", ""),
+                    "action": "open_route"
+                }
+                notification_body = f"{notification_data['bus_type']} - {notification_data['route_name']} ({notification_data['departure_date']} {notification_data['departure_time']})"
+                
+                push_result = await web_push_service.send_to_all_users(
+                    supabase,
+                    "🎉 통학버스 예매 오픈!",
+                    notification_body,
+                    notification_data
+                )
+                logger.info(f"푸시 알림 전송 결과: {push_result}")
+            except Exception as e:
+                logger.error(f"푸시 알림 전송 실패: {e}")
+                push_result = {"error": str(e)}
+        
+        response_data = {
             "message": f"노선이 {'오픈' if new_status else '닫힘'}되었습니다.",
             "route": updated.data[0]
         }
+        
+        # 푸시 알림 결과 포함
+        if push_result is not None:
+            response_data["push_notification"] = push_result
+        
+        return response_data
     except HTTPException:
         raise
     except Exception as e:

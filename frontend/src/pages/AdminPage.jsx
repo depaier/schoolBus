@@ -89,37 +89,19 @@ function AdminPage() {
     if (!target) return;
 
     try {
-      // 특정 노선의 상태 토글
+      // 특정 노선의 상태 토글 (푸시 알림도 여기서 전송됨)
       const toggleResponse = await axios.post(`${API_BASE_URL}/api/routes/${target.routeId}/toggle`);
-      const updatedRoute = toggleResponse.data.route;
 
       // 데이터 다시 로드하여 최신 상태 가져오기
       await fetchRoutes();
 
-      // 전체 예매 상태 업데이트 (하나라도 오픈되면 전체 오픈)
-      // fetchRoutes 후 reservations가 업데이트되기 전이므로 API로 다시 확인
-      const routesResponse = await axios.get(`${API_BASE_URL}/api/routes`);
-      const hasOpenRoute = routesResponse.data.routes.some(route => route.is_open);
-      
-      // 노선이 오픈되었을 때만 노선 정보 전달
-      const updateResponse = await axios.post(`${API_BASE_URL}/api/reservation/update`, {
-        is_open: hasOpenRoute,
-        route_info: updatedRoute.is_open ? {
-          route_id: updatedRoute.route_id,
-          route_name: updatedRoute.route_name,
-          bus_type: updatedRoute.bus_type,
-          departure_date: updatedRoute.departure_date,
-          departure_time: updatedRoute.departure_time
-        } : null
-      });
-
-      console.log(`전체 예매 상태 업데이트: ${hasOpenRoute ? '오픈' : '마감'}`);
+      console.log(`노선 상태 변경: ${toggleResponse.data.message}`);
       
       // 푸시 알림 결과 확인
-      if (updateResponse.data.push_notification) {
-        console.log('📱 푸시 알림 전송 결과:', updateResponse.data.push_notification);
-        if (updateResponse.data.push_notification.success_count > 0) {
-          alert(`✅ ${updateResponse.data.push_notification.success_count}명에게 푸시 알림이 전송되었습니다!`);
+      if (toggleResponse.data.push_notification) {
+        console.log('📱 푸시 알림 전송 결과:', toggleResponse.data.push_notification);
+        if (toggleResponse.data.push_notification.success_count > 0) {
+          alert(`✅ ${toggleResponse.data.push_notification.success_count}명에게 푸시 알림이 전송되었습니다!`);
         }
       }
 

@@ -61,26 +61,10 @@ function HomeContent({ isLoggedIn }) {
   const [selectedRoute, setSelectedRoute] = useState(null)
   const [seatCount, setSeatCount] = useState(1)
 
-  const [reservationStatus, setReservationStatus] = useState({
-    is_open: false,
-    updated_at: null
-  })
-
   const [notificationPermission, setNotificationPermission] = useState('default')
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(false)
   const [pushTokenInfo, setPushTokenInfo] = useState(null) // 푸시 토큰 정보
   const [currentStudentId, setCurrentStudentId] = useState(null) // 현재 로그인한 학번
-
-  // 예매 상태 조회 (한 번만)
-  const fetchReservationStatus = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/reservation/status`)
-      setReservationStatus(response.data)
-      console.log('✅ 예매 상태:', response.data.is_open ? '오픈' : '마감')
-    } catch (err) {
-      console.error('❌ 예매 상태 조회 실패:', err)
-    }
-  }
 
   // 알림 권한 요청 및 토큰 발급
   const requestNotificationPermission = async () => {
@@ -202,7 +186,6 @@ function HomeContent({ isLoggedIn }) {
     
     // 🔥 전체 노선 목록 로드 (드롭다운용)
     fetchAllRoutes()
-    fetchReservationStatus()
 
     // 🔥 URL 파라미터 확인 (알림에서 온 경우)
     const urlParams = new URLSearchParams(window.location.search)
@@ -293,10 +276,10 @@ function HomeContent({ isLoggedIn }) {
     setHasSearched(true)
   }
 
-  // 예매 상태 새로고침 (수동)
+  // 노선 목록 새로고침 (수동)
   const refreshStatus = () => {
-    fetchReservationStatus()
-    alert('예매 상태를 새로고침했습니다.')
+    fetchAllRoutes()
+    alert('노선 목록을 새로고침했습니다.')
   }
 
   // 예약 버튼 클릭 - 인원 선택 단계로 이동
@@ -367,30 +350,30 @@ function HomeContent({ isLoggedIn }) {
     console.log('🔔 알림 클릭 처리:', data)
 
     // 해당 노선 찾기
-    const route = allRoutes.find(r => r.routeId === data.route_id)
+    let route = allRoutes.find(r => r.routeId === data.route_id)
     
-    if (route) {
-      console.log('✅ 노선 찾음:', route)
-      // 바로 인원 선택 단계로 이동
-      setSelectedRoute(route)
-      setSeatCount(1)
-      setReservationStep('selectSeats')
-      setHasSearched(true)
-    } else {
+    if (!route) {
       console.log('⚠️ 노선을 찾을 수 없음, 전체 노선 다시 로드')
       // 노선을 찾을 수 없으면 전체 노선 다시 로드
       await fetchAllRoutes()
       
       // 다시 찾기
-      setTimeout(() => {
-        const foundRoute = allRoutes.find(r => r.routeId === data.route_id)
-        if (foundRoute) {
-          setSelectedRoute(foundRoute)
-          setSeatCount(1)
-          setReservationStep('selectSeats')
-          setHasSearched(true)
-        }
-      }, 500)
+      route = allRoutes.find(r => r.routeId === data.route_id)
+    }
+    
+    if (route) {
+      console.log('✅ 노선 찾음:', route)
+      // reservations 배열에 해당 노선만 설정 (조회 결과처럼)
+      setReservations([route])
+      setHasSearched(true)
+      
+      // 바로 인원 선택 단계로 이동
+      setSelectedRoute(route)
+      setSeatCount(1)
+      setReservationStep('selectSeats')
+    } else {
+      console.error('❌ 노선을 찾을 수 없습니다:', data.route_id)
+      alert('해당 노선을 찾을 수 없습니다.')
     }
   }
 
