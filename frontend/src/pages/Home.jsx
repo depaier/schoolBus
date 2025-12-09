@@ -431,7 +431,7 @@ function HomeContent({ isLoggedIn }) {
                       <p>💺 좌석: {route.availableSeats}/{route.totalSeats}</p>
                     </div>
                     {route.isOpen && (
-                      <button className="btn-reserve">예약하기</button>
+                      <button className="btn-reserve" onClick={() => navigate('/reservation')}>예약하기</button>
                     )}
                   </div>
                 ))
@@ -506,38 +506,6 @@ function HomeContent({ isLoggedIn }) {
             <div className="notification-warning">
               ⚠️ 알림이 차단되었습니다. 브라우저 설정에서 알림을 허용해주세요.
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* 예매 상태 */}
-      <div className="monitoring-section">
-        <h2>예매 상태</h2>
-        <div className="status-display">
-          <div className={`status-indicator ${reservationStatus.is_open ? 'open' : 'closed'}`}>
-            <span className="status-dot"></span>
-            <span className="status-text">
-              {reservationStatus.is_open ? '🔓 예매 오픈' : '🔒 예매 마감'}
-            </span>
-          </div>
-          {reservationStatus.updated_at && (
-            <p className="last-updated">
-              마지막 업데이트: {new Date(reservationStatus.updated_at).toLocaleString('ko-KR')}
-            </p>
-          )}
-        </div>
-
-        <div className="polling-controls">
-          <button onClick={refreshStatus} className="btn-start-polling">
-            상태 새로고침
-          </button>
-          <p className="polling-info">
-            🟢 예매가 오픈되면 서버에서 자동으로 푸시 알림을 보냅니다!
-          </p>
-          {isNotificationEnabled && (
-            <p className="notification-active-info">
-              🔔 알림이 활성화되어 있습니다. 예매 오픈 시 자동으로 푸시 알림을 받게 됩니다.
-            </p>
           )}
         </div>
       </div>
