@@ -211,8 +211,10 @@ function HomeContent({ isLoggedIn }) {
       console.log('🔔 알림에서 노선으로 이동:', routeId)
       // URL 파라미터 제거
       window.history.replaceState({}, '', '/')
-      // 노선 찾아서 이동 (handleNotificationClick이 자체적으로 로드함)
-      handleNotificationClick({ route_id: routeId })
+      // 노선 찾아서 이동
+      setTimeout(() => {
+        handleNotificationClick({ route_id: routeId })
+      }, 1000) // 노선 로드 대기
     }
 
     // Service Worker 메시지 리스너
@@ -364,50 +366,31 @@ function HomeContent({ isLoggedIn }) {
 
     console.log('🔔 알림 클릭 처리:', data)
 
-    try {
-      // 항상 최신 노선 목록 로드
-      console.log('📥 최신 노선 목록 로드 중...')
-      const response = await axios.get(`${API_BASE_URL}/api/routes`)
+    // 해당 노선 찾기
+    const route = allRoutes.find(r => r.routeId === data.route_id)
+    
+    if (route) {
+      console.log('✅ 노선 찾음:', route)
+      // 바로 인원 선택 단계로 이동
+      setSelectedRoute(route)
+      setSeatCount(1)
+      setReservationStep('selectSeats')
+      setHasSearched(true)
+    } else {
+      console.log('⚠️ 노선을 찾을 수 없음, 전체 노선 다시 로드')
+      // 노선을 찾을 수 없으면 전체 노선 다시 로드
+      await fetchAllRoutes()
       
-      if (!response.data || !response.data.routes) {
-        console.error('❌ API 응답 형식이 올바르지 않습니다:', response.data)
-        return
-      }
-      
-      const routes = response.data.routes.map(route => ({
-        id: route.id,
-        routeName: route.route_name,
-        routeId: route.route_id,
-        busType: route.bus_type || '등교',
-        departureDate: route.departure_date || new Date().toISOString().split('T')[0],
-        departureTime: route.departure_time,
-        availableSeats: route.available_seats,
-        totalSeats: route.total_seats,
-        isOpen: route.is_open
-      }))
-      
-      console.log('✅ 로드된 노선:', routes)
-      
-      // 해당 노선 찾기
-      const route = routes.find(r => r.routeId === data.route_id)
-      
-      if (route) {
-        console.log('✅ 노선 찾음:', route)
-        // allRoutes 업데이트
-        setAllRoutes(routes)
-        // 바로 인원 선택 단계로 이동
-        setSelectedRoute(route)
-        setSeatCount(1)
-        setReservationStep('selectSeats')
-        setHasSearched(true)
-      } else {
-        console.log('⚠️ 노선을 찾을 수 없음:', data.route_id)
-        console.log('사용 가능한 노선 ID:', routes.map(r => r.routeId))
-        alert('해당 노선을 찾을 수 없습니다.')
-      }
-    } catch (err) {
-      console.error('❌ 노선 로드 실패:', err)
-      alert('노선 정보를 불러오는데 실패했습니다.')
+      // 다시 찾기
+      setTimeout(() => {
+        const foundRoute = allRoutes.find(r => r.routeId === data.route_id)
+        if (foundRoute) {
+          setSelectedRoute(foundRoute)
+          setSeatCount(1)
+          setReservationStep('selectSeats')
+          setHasSearched(true)
+        }
+      }, 500)
     }
   }
 
