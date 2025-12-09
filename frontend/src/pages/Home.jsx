@@ -204,21 +204,6 @@ function HomeContent({ isLoggedIn }) {
     fetchAllRoutes()
     fetchReservationStatus()
 
-    // 🔥 PWA로 처음 접속 시 자동으로 알림 권한 요청
-    const hasRequestedNotification = localStorage.getItem('hasRequestedNotification')
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                  window.navigator.standalone || 
-                  document.referrer.includes('android-app://')
-    
-    if (isLoggedIn && isPWA && !hasRequestedNotification && !savedNotificationEnabled) {
-      console.log('🔔 PWA 첫 접속 - 자동 알림 권한 요청')
-      // 약간의 지연 후 알림 권한 요청 (사용자 경험 개선)
-      setTimeout(() => {
-        requestNotificationPermission()
-        localStorage.setItem('hasRequestedNotification', 'true')
-      }, 1000)
-    }
-
     // 🔥 URL 파라미터 확인 (알림에서 온 경우)
     const urlParams = new URLSearchParams(window.location.search)
     const routeId = urlParams.get('route')
