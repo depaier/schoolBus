@@ -51,7 +51,7 @@ function AppContent() {
       {!hideHeader && (
         <header className="app-header">
           <div className="header-container">
-            <div className="logo">한세대학교</div>
+            <div className="logo">한서대학교</div>
             <nav className="header-nav">
               {!isLoggedIn ? (
                 <>
