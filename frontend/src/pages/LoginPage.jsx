@@ -13,6 +13,7 @@ function LoginPage() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -77,64 +78,81 @@ function LoginPage() {
     <div className="login-page">
       <div className="login-container">
         <div className="login-header">
-          <h1>🚌 통학버스 로그인</h1>
-          <p>학번과 비밀번호를 입력하세요</p>
+          <h1>로그인</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="student_id">학번</label>
-            <input
-              type="text"
-              id="student_id"
-              name="student_id"
-              value={formData.student_id}
-              onChange={handleChange}
-              placeholder="학번을 입력하세요"
-              disabled={loading}
-              autoFocus
-            />
+        <div className="login-box">
+          <div className="login-box-header">
+            <h2>회원로그인</h2>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">비밀번호</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="비밀번호를 입력하세요"
-              disabled={loading}
-            />
-          </div>
-
-          {error && (
-            <div className="error-message">
-              ⚠️ {error}
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-inputs">
+              <div className="input-group">
+                <input
+                  type="text"
+                  id="student_id"
+                  name="student_id"
+                  value={formData.student_id}
+                  onChange={handleChange}
+                  placeholder="202100665"
+                  disabled={loading}
+                  autoFocus
+                />
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  disabled={loading}
+                />
+              </div>
+              <button 
+                type="submit" 
+                className="btn-login"
+                disabled={loading}
+              >
+                {loading ? '로그인 중...' : '로그인'}
+              </button>
             </div>
-          )}
 
+            <div className="form-options">
+              <label className="remember-me">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>아이디저장</span>
+              </label>
+              <button type="button" className="find-link">
+                아이디 / 비밀번호 찾기
+              </button>
+            </div>
+
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
+          </form>
+        </div>
+
+        <div className="login-footer">
           <button 
-            type="submit" 
-            className="btn-login"
+            type="button" 
+            onClick={goToRegister}
+            className="btn-register"
             disabled={loading}
           >
-            {loading ? '로그인 중...' : '로그인'}
+            회원가입
           </button>
-
-          <div className="login-footer">
-            <p>계정이 없으신가요?</p>
-            <button 
-              type="button" 
-              onClick={goToRegister}
-              className="btn-register-link"
-              disabled={loading}
-            >
-              회원가입하기
-            </button>
+          <div className="contact-info">
+            문의전화 | 041-688-7610
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )
